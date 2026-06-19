@@ -1,6 +1,6 @@
 {
   "name": "@tjdals12/agent-bolt",
-  "version": "0.0.0-development",
+  "version": "1.0.0-next.1",
   "description": "Manage, transform, and install team-shared AI development workflow assets across multiple AI tools",
   "type": "module",
   "license": "MIT",
