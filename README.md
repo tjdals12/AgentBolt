@@ -264,6 +264,8 @@ Here's what each marker in the output means:
 
 AgentBolt ships `catalog` commands for building and managing catalogs.
 
+The fastest way to start is from the [AgentBoltCatalogTemplate](https://github.com/tjdals12/AgentBoltCatalogTemplate) repository — use it as a template to get a ready-made layout, then fill in your own packs and items. To build one from scratch, follow the steps below.
+
 ### Create a catalog directory
 
 Create an empty directory to use as your catalog.

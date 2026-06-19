@@ -264,6 +264,8 @@ Codex   🔧 4 skills  🤖 1 agent  📋 1 guideline
 
 AgentBolt는 카탈로그를 관리하기 위한 `catalog` 명령을 제공합니다.
 
+가장 빠르게 시작하려면 [AgentBoltCatalogTemplate](https://github.com/tjdals12/AgentBoltCatalogTemplate) 저장소를 템플릿으로 사용하세요. 기본 구조가 갖춰진 상태에서 패키지와 아이템만 채우면 됩니다. 처음부터 직접 만들려면 아래 단계를 따르세요.
+
 ### 카탈로그 디렉터리 만들기
 
 카탈로그로 사용할 빈 디렉터리를 만듭니다.
