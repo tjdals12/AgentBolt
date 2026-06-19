@@ -1,14 +1,26 @@
 {
-  "name": "agent-bolt",
-  "version": "0.0.0",
+  "name": "@tjdals12/agent-bolt",
+  "version": "0.0.0-development",
   "description": "Manage, transform, and install team-shared AI development workflow assets across multiple AI tools",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tjdals12/AgentBolt.git"
+  },
+  "files": [
+    "bin/",
+    "dist/"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "engines": {
     "node": ">=24"
   },
   "bin": {
-    "agent-bolt": "./bin/agent-bolt.js"
+    "agent-bolt": "bin/agent-bolt.js"
   },
   "imports": {
     "#catalog/*": {
@@ -52,6 +64,8 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^25.9.1",
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.4.1",
@@ -59,6 +73,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
+    "semantic-release": "^25.0.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1",
     "vitest": "^4.1.9"
