@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/agent-bolt"><img src="https://img.shields.io/npm/v/agent-bolt" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/agent-bolt"><img src="https://img.shields.io/npm/dm/agent-bolt" alt="downloads"></a>
+  <a href="https://www.npmjs.com/package/@tjdals12/agent-bolt"><img src="https://img.shields.io/npm/v/@tjdals12/agent-bolt" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@tjdals12/agent-bolt"><img src="https://img.shields.io/npm/dm/@tjdals12/agent-bolt" alt="downloads"></a>
   <a href="https://github.com/tjdals12/AgentBolt/actions/workflows/ci.yml"><img src="https://github.com/tjdals12/AgentBolt/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
 </p>
@@ -44,7 +44,7 @@ AgentBolt는 프로젝트 외부의 저장소에 모아 둔 스킬, 서브 에�
 AgentBolt를 전역에 설치합니다.
 
 ```bash
-npm install -g agent-bolt
+npm install -g @tjdals12/agent-bolt
 ```
 
 프로젝트 디렉터리로 이동해 초기화합니다.
@@ -263,6 +263,8 @@ Codex   🔧 4 skills  🤖 1 agent  📋 1 guideline
 ## 카탈로그 생성
 
 AgentBolt는 카탈로그를 관리하기 위한 `catalog` 명령을 제공합니다.
+
+가장 빠르게 시작하려면 [AgentBoltCatalogTemplate](https://github.com/tjdals12/AgentBoltCatalogTemplate) 저장소를 템플릿으로 사용하세요. 기본 구조가 갖춰진 상태에서 패키지와 아이템만 채우면 됩니다. 처음부터 직접 만들려면 아래 단계를 따르세요.
 
 ### 카탈로그 디렉터리 만들기
 

@@ -128,9 +128,9 @@ program
 program
   .command('show-item')
   .description('Show full details of an item in a pack (description, instructions, assets)')
-  .requiredOption('--source <alias>', 'Source alias the pack belongs to')
-  .requiredOption('--pack <name>', 'Pack name the item belongs to')
-  .requiredOption('--item <name>', 'Item name to show')
+  .requiredOption('--source <alias>', 'Source alias the pack belongs to (required)')
+  .requiredOption('--pack <name>', 'Pack name the item belongs to (required)')
+  .requiredOption('--item <name>', 'Item name to show (required)')
   .option('--no-pager', 'Print directly without the pager')
   .addHelpText(
     'after',
@@ -156,8 +156,8 @@ program
 program
   .command('add-pack')
   .description('Add whole packs from a source to the config (all items included)')
-  .requiredOption('--source <alias>', 'Target source to add the packs to')
-  .requiredOption('--packs <list>', 'Pack names to add (comma separated)')
+  .requiredOption('--source <alias>', 'Target source to add the packs to (required)')
+  .requiredOption('--packs <list>', 'Pack names to add (comma separated) (required)')
   .addHelpText(
     'after',
     dedent`
@@ -183,8 +183,8 @@ program
 program
   .command('remove-pack')
   .description('Remove whole packs from a source in the config')
-  .requiredOption('--source <alias>', 'Target source to remove the packs from')
-  .requiredOption('--packs <list>', 'Pack names to remove (comma separated)')
+  .requiredOption('--source <alias>', 'Target source to remove the packs from (required)')
+  .requiredOption('--packs <list>', 'Pack names to remove (comma separated) (required)')
   .addHelpText(
     'after',
     dedent`
@@ -210,8 +210,8 @@ program
 program
   .command('add-item')
   .description('Add items to a source/pack in the config (creates the pack section if missing)')
-  .requiredOption('--source <alias>', 'Target source to add the items to')
-  .requiredOption('--pack <name>', 'Target pack to add the items to')
+  .requiredOption('--source <alias>', 'Target source to add the items to (required)')
+  .requiredOption('--pack <name>', 'Target pack to add the items to (required)')
   .option('--skills <list>', 'Skill names to add (comma separated)')
   .option('--agents <list>', 'Agent names to add (comma separated)')
   .option('--guidelines <list>', 'Guideline names to add (comma separated)')
@@ -250,8 +250,8 @@ program
   .description(
     'Remove items from a source/pack in the config (prunes the pack section if it becomes empty)',
   )
-  .requiredOption('--source <alias>', 'Target source to remove the items from')
-  .requiredOption('--pack <name>', 'Target pack to remove the items from')
+  .requiredOption('--source <alias>', 'Target source to remove the items from (required)')
+  .requiredOption('--pack <name>', 'Target pack to remove the items from (required)')
   .option('--skills <list>', 'Skill names to remove (comma separated)')
   .option('--agents <list>', 'Agent names to remove (comma separated)')
   .option('--guidelines <list>', 'Guideline names to remove (comma separated)')
@@ -438,7 +438,7 @@ catalog
 catalog
   .command('new-skill <name>')
   .description('Create a new skill skeleton (packs/<pack>/skills/<name>/)')
-  .requiredOption('--pack <name>', 'Parent pack the skill belongs to')
+  .requiredOption('--pack <name>', 'Parent pack the skill belongs to (required)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Skill description (default: a TODO placeholder)')
   .addHelpText(
@@ -476,7 +476,7 @@ catalog
 catalog
   .command('new-agent <name>')
   .description('Create a new agent skeleton (packs/<pack>/agents/<name>/)')
-  .requiredOption('--pack <name>', 'Parent pack the agent belongs to')
+  .requiredOption('--pack <name>', 'Parent pack the agent belongs to (required)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Agent description (default: a TODO placeholder)')
   .addHelpText(
@@ -509,7 +509,7 @@ catalog
 catalog
   .command('new-guideline <name>')
   .description('Create a new guideline skeleton (packs/<pack>/guidelines/<name>/)')
-  .requiredOption('--pack <name>', 'Parent pack the guideline belongs to')
+  .requiredOption('--pack <name>', 'Parent pack the guideline belongs to (required)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Guideline description (default: a TODO placeholder)')
   .addHelpText(
