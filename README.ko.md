@@ -1,0 +1,605 @@
+<p align="center">
+  <img src="assets/banner.webp" alt="AgentBolt" width="100%">
+</p>
+
+<p align="center">
+  <a href="README.md">English</a> | 한국어
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/agent-bolt"><img src="https://img.shields.io/npm/v/agent-bolt" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/agent-bolt"><img src="https://img.shields.io/npm/dm/agent-bolt" alt="downloads"></a>
+  <a href="https://github.com/tjdals12/AgentBolt/actions/workflows/ci.yml"><img src="https://github.com/tjdals12/AgentBolt/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+
+<p align="center">
+  <strong>한곳에서 관리하고, 어떤 에이전트에든 바로 설치하세요.</strong>
+</p>
+
+Claude, Codex, Gemini 등 여러 에이전트를 함께 사용하면서 불편하지 않으셨나요? 에이전트마다 스킬과 가이드라인, 서브 에이전트를 관리하는 위치도 형식도 달라서, 같은 내용을 여러 군데에 따로따로 관리해야 합니다. 또한, 잘 만들어진 스킬을 다른 팀, 다른 프로젝트에서 사용하려면 일일이 복사해야 하고, 그렇게 여기저기 흩어진 파일을 따로따로 관리하게 됩니다.
+
+AgentBolt는 스킬과 가이드라인, 서브 에이전트를 한곳에 모아 관리하고, 각 에이전트에 맞는 형식으로 변환해 설치하는 CLI 도구입니다. 하나의 원본만 관리하면, 여러 에이전트와 여러 프로젝트, 여러 팀에서 그대로 사용할 수 있습니다.
+
+## 핵심 개념
+
+AgentBolt는 프로젝트 외부의 저장소에 모아 둔 스킬, 서브 에이전트, 가이드라인을 가져와, 프로젝트에서 사용하는 에이전트에 맞는 형식으로 변환해 설치합니다. 여기서 이 저장소를 카탈로그라고 하고, 스킬, 서브 에이전트, 가이드라인을 아이템이라고 하며, 관련된 아이템을 하나로 묶은 것을 패키지라고 합니다.
+
+### 카탈로그
+
+아이템을 모아 둔 저장소입니다. 로컬 디렉터리에 두거나 Git 저장소에 올릴 수 있습니다. 카탈로그를 프로젝트 안이 아니라 별도 저장소로 둔 이유는, 잘 만든 아이템을 한곳에서 관리하면서 여러 프로젝트와 팀이 함께 쓰기 위해서입니다. 특히 Git 저장소에 올리면 변경 이력을 버전으로 관리하고, 팀이 같은 카탈로그를 공유할 수 있습니다.
+
+### 패키지
+
+여러 아이템을 하나로 묶은 단위입니다. 어떤 기준으로 묶을지는 자유롭게 정할 수 있습니다. 예를 들어 커밋 작성·PR 생성처럼 같은 작업 흐름에 쓰이는 아이템을 `git-workflow`로 묶을 수도 있고, 특정 팀이 함께 쓰는 아이템을 팀 단위로 묶을 수도 있습니다. 이렇게 묶어 두면 아이템을 하나씩 고르지 않고 패키지 단위로 한 번에 가져올 수 있습니다.
+
+### 아이템
+
+에이전트에 설치되는 스킬, 서브 에이전트, 가이드라인입니다. 스킬과 서브 에이전트는 에이전트에서 쓰는 용어 그대로이고, 가이드라인은 `CLAUDE.md`·`AGENTS.md` 같은 파일에 적는 프로젝트 지침을 말합니다.
+
+## 시작하기
+
+**Node.js 24 이상이 필요합니다.**
+
+AgentBolt를 전역에 설치합니다.
+
+```bash
+npm install -g agent-bolt
+```
+
+프로젝트 디렉터리로 이동해 초기화합니다.
+
+```bash
+cd your-project
+agent-bolt init
+```
+
+`init`을 실행하면 사용할 에이전트를 선택하고, 카탈로그를 추가합니다. 지원하는 에이전트는 다음과 같습니다.
+
+| 에이전트    | `--tools` 값 |
+| ----------- | ------------ |
+| Claude Code | `claude`     |
+| Codex       | `codex`      |
+
+카탈로그는 로컬 디렉터리나 Git 저장소에 둘 수 있습니다.
+
+| 종류          | `--source` 예시                                |
+| ------------- | ---------------------------------------------- |
+| 로컬 디렉터리 | `dev=local:./catalog`                          |
+| Git 저장소    | `team=git:https://github.com/acme/catalog.git` |
+
+초기화한 뒤 카탈로그에서 아이템을 골라 설치하는 과정은 아래 [사용 방법](#사용-방법)을 참고하세요.
+
+## 사용 방법
+
+AgentBolt는 카탈로그에서 아이템을 가져와 에이전트에 설치합니다. 쓸 카탈로그를 정하는 것부터 설치·점검까지의 흐름은 다음과 같습니다.
+
+### 카탈로그 구성하기
+
+카탈로그는 로컬 디렉터리에 두거나, Git 저장소에 올려 팀과 공유할 수 있습니다. 카탈로그를 직접 만들려면 [카탈로그 생성](#카탈로그-생성)을 참고하세요.
+
+처음이라면 [이미 만들어진 카탈로그](https://github.com/tjdals12/AgentBoltCatalog.git)로 바로 시작할 수 있습니다.
+
+```bash
+agent-bolt init --tools=claude,codex --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
+```
+
+### 카탈로그 둘러보기
+
+`list-packs`로 카탈로그에서 제공하는 패키지를 확인합니다.
+
+```text
+$ agent-bolt list-packs
+
+▌ Agent Bolt: Catalog packs
+
+▸ common  (local)
+
+  📦 backend
+     Skills specialized for NestJS/Prisma backend development.
+     🔧 2 skills  🤖 2 agents  📋 6 guidelines
+
+  ...
+```
+
+`list-items`로 특정 패키지에서 제공하는 아이템(스킬, 서브 에이전트, 가이드라인)을 확인합니다.
+
+```text
+$ agent-bolt list-items --packs=common
+
+▌ Agent Bolt: Catalog items
+
+  📦 common
+
+    🔧 4 skills
+         clean-code
+           Apply Robert C. Martin's Clean Code principles ...
+         ...
+    🤖 8 agents
+         ...
+    📋 3 guidelines
+         ...
+```
+
+`show-item`으로 특정 아이템의 내용과 설정을 자세히 확인할 수 있습니다.
+
+```text
+$ agent-bolt show-item --source=common --pack=common --item=create-commit
+
+▌ Agent Bolt: Catalog item
+
+🔧 create-commit
+  common/common · skill
+
+description
+  Generate Conventional Commits messages, stage changes if needed, ...
+
+instructions
+  # Create Commit
+  ...
+```
+
+### 사용할 패키지·아이템 선택하기
+
+`add-pack`으로 패키지의 전체 아이템을 추가합니다.
+
+```text
+$ agent-bolt add-pack --source=common --packs=common
+
+▌ Agent Bolt: Added 1 pack to common
+
++ 📂 common   🔧 4 skills  🤖 8 agents  📋 3 guidelines
+...
+```
+
+`add-item`으로 패키지에서 특정 아이템만 추가합니다.
+
+```text
+$ agent-bolt add-item --source=common --pack=backend --skills=nestjs-expert
+
+▌ Agent Bolt: Added 1 item to common/backend
+  (created pack backend in common)
+
+  + 🔧 nestjs-expert
+...
+```
+
+`remove-pack`·`remove-item`으로 추가한 패키지·아이템을 삭제합니다.
+
+```text
+$ agent-bolt remove-item --source=common --pack=common --skills=pr-review
+
+▌ Agent Bolt: Removed 1 item from common/common
+
+  - 🔧 pr-review
+...
+```
+
+이 명령들은 설정 파일을 바꿀 뿐입니다. 실제 설치는 `sync`에서 이루어집니다.
+
+### 에이전트에 설치하기
+
+`sync`를 실행하면 설정에 담긴 아이템을 각 에이전트 형식으로 변환해 설치합니다.
+
+```text
+$ agent-bolt sync
+
+▌ Agent Bolt: Sync complete
+
+Claude Code   🔧 3 skills  🤖 8 agents  📋 3 guidelines
+  + 14 installed
+    common/clean-code, common/create-commit, ...
+
+Codex   🔧 3 skills  🤖 8 agents  📋 3 guidelines
+  + 12 installed
+    common/clean-code, common/create-commit, ...
+
+26 installed
+```
+
+파일은 각 에이전트가 인식하는 위치에 맞춰 설치됩니다.
+
+```text
+your-project/
+├── .claude/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   ├── agents/
+│   │   ├── bolt-common-common-code-reviewer.md
+│   │   └── ...
+│   └── rules/
+│       ├── bolt-common-common-commit-rules.md
+│       └── ...
+├── .codex/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   └── agents/
+│       ├── bolt-common-common-code-reviewer.toml
+│       └── ...
+└── AGENTS.md   # Codex 가이드라인이 관리 블록으로 누적
+```
+
+### 설치 상태 점검하기
+
+`check`는 설치 상태를 확인해서 설정 파일과 어긋난 부분을 확인합니다.
+
+```text
+$ agent-bolt check
+
+▌ Agent Bolt: Drift detected
+
+Claude Code   🔧 4 skills  🤖 1 agent  📋 1 guideline
+  + 1 missing
+    backend/nestjs-expert
+  ~ 1 drifted
+    common/create-commit
+  - 1 orphaned
+    common/pr-review
+
+Codex   🔧 4 skills  🤖 1 agent  📋 1 guideline
+  + 1 missing
+    backend/nestjs-expert
+  - 1 orphaned
+    common/pr-review
+
+2 missing · 1 drifted · 2 orphaned
+...
+```
+
+**참고:** 어긋난 부분이 있으면 종료 코드 1(`process.exitCode = 1`)로 끝납니다. CI에 추가하면 설치 상태가 어긋난 채 병합되는 것을 막을 수 있습니다.
+
+출력의 각 표시는 다음을 뜻합니다.
+
+| 표시 | 상태     | 의미                                    |
+| ---- | -------- | --------------------------------------- |
+| `+`  | missing  | 설정 파일에는 있지만 아직 설치되지 않음 |
+| `~`  | drifted  | 설치돼 있지만 내용이 카탈로그와 다름    |
+| `-`  | orphaned | 설정 파일에서 빠졌지만 설치는 남아 있음 |
+
+## 카탈로그 생성
+
+AgentBolt는 카탈로그를 관리하기 위한 `catalog` 명령을 제공합니다.
+
+### 카탈로그 디렉터리 만들기
+
+카탈로그로 사용할 빈 디렉터리를 만듭니다.
+
+```bash
+mkdir acme-catalog && cd acme-catalog
+```
+
+### 카탈로그 초기화하기
+
+`catalog init`으로 디렉터리를 카탈로그로 초기화합니다. 매니페스트(`catalog.json`)와 패키지 스캐폴드(`packs/`)를 생성합니다.
+
+```text
+$ agent-bolt catalog init --name=acme-catalog --description="Team shared assets"
+
+▌ Agent Bolt: Catalog initialized
+
+name:        acme-catalog
+description: Team shared assets
+location:    .
+
+  + catalog.json
+  + packs/
+...
+```
+
+### 패키지 만들기
+
+`catalog new-pack`으로 패키지를 만듭니다. 패키지 디렉터리와 매니페스트(`pack.json`)를 생성합니다.
+
+```text
+$ agent-bolt catalog new-pack git-workflow --description="Commit and PR helpers"
+
+▌ Agent Bolt: Created pack git-workflow
+
+name:        git-workflow
+description: Commit and PR helpers
+location:    .
+
+  + packs/git-workflow/
+  + packs/git-workflow/pack.json
+...
+```
+
+### 아이템 만들기
+
+`catalog new-skill`·`new-agent`·`new-guideline`으로 아이템을 만듭니다. 타입에 맞는 매니페스트와 파일이 생성되며, 해당 파일을 수정해서 아이템을 완성합니다.
+
+```text
+$ agent-bolt catalog new-skill create-commit --pack=git-workflow
+
+▌ Agent Bolt: Created skill create-commit
+
+name:        create-commit
+pack:        git-workflow
+description: TODO: describe this item
+location:    .
+
+  + packs/git-workflow/skills/create-commit/
+  + packs/git-workflow/skills/create-commit/skill.json
+  + packs/git-workflow/skills/create-commit/instructions.md
+...
+```
+
+### 카탈로그 검증하기
+
+`catalog validate`로 카탈로그를 검사합니다. 매니페스트가 스키마에 맞는지, 본문과 에셋 파일이 모두 있는지, 이름과 디렉터리가 일치하는지 등을 확인합니다.
+
+```text
+$ agent-bolt catalog validate
+
+▌ Agent Bolt: Catalog valid
+
+1 pack   🔧 1 skill  🤖 0 agents  📋 0 guidelines
+
+no problems found
+```
+
+**참고:** 문제가 있으면 종료 코드 1(`process.exitCode = 1`)로 끝납니다. CI에 추가하면 카탈로그가 깨진 채 병합되는 것을 막을 수 있습니다.
+
+### (선택) Git으로 공유하기
+
+팀과 공유하려면 카탈로그를 Git 저장소에 올립니다.
+
+```bash
+git init
+git add .
+git commit -m "Add catalog"
+git remote add origin <repo-url>
+git push -u origin main
+```
+
+## 프로젝트 구조
+
+프로젝트에서 AgentBolt를 초기화하면 `.agent-bolt/` 디렉터리가 생성됩니다.
+
+`.agent-bolt/`에는 두 파일이 있습니다.
+
+- **catalog-config.yml** — 어떤 에이전트에, 어떤 카탈로그의, 어떤 아이템을 설치할지 선언하는 설정 파일입니다. 직접 편집할 수도 있지만, AgentBolt가 제공하는 명령으로 관리하는 것을 권장합니다.
+- **install-lock.json** — 현재 설치 상태를 저장하는 파일입니다. `sync` 실행 시 생성·갱신되며, 이후 `sync`·`check`가 설치 상태를 확인하기 위해서 사용합니다.
+
+### catalog-config.yml
+
+```yaml
+version: 1
+
+# 아이템을 설치할 에이전트
+tools:
+  - claude
+  - codex
+
+# 아이템을 가져올 카탈로그
+sources:
+  common:
+    # local: 로컬 디렉터리 / git: Git 저장소
+    type: local
+    # 카탈로그 디렉터리 경로
+    path: ./catalog
+  team:
+    type: git
+    # Git 저장소 URL
+    url: https://github.com/acme/catalog.git
+    # (선택) 브랜치/태그 (기본: 저장소 기본 브랜치)
+    ref: main
+    # (선택) 카탈로그가 저장소 하위 경로에 있을 때
+    subdir: catalog
+
+# 설치할 패키지·아이템 (source 별칭 → 패키지 → 타입별 아이템)
+packs:
+  common:
+    git-workflow:
+      # 추가할 skill
+      skills:
+        - create-commit
+        - create-pr
+      # 추가할 agent
+      agents:
+        - code-reviewer
+      # 추가할 guideline
+      guidelines:
+        # always: 항상 적용
+        commit-rules:
+          load: always
+        # conditional: glob 패턴의 파일에만 적용
+        react-conventions:
+          load: conditional
+          glob:
+            - src/**/*.tsx
+```
+
+## 명령어
+
+### `agent-bolt init`
+
+프로젝트에 AgentBolt를 설정합니다. 옵션 없이 실행하면 대화형으로 진행합니다.
+
+```text
+agent-bolt init [options]
+```
+
+| 옵션              | 설명                                                                         | 필수/선택 | 기본값      |
+| ----------------- | ---------------------------------------------------------------------------- | --------- | ----------- |
+| `--tools <list>`  | 아이템을 설치할 에이전트. 콤마로 구분 (예: `claude,codex`)                   | 선택      | 대화형 선택 |
+| `--source <spec>` | 아이템을 가져올 카탈로그. `<별칭>=<형식>:<위치>` (예: `dev=local:./catalog`) | 선택      | 대화형 선택 |
+| `--force`         | 기존 설정 파일을 덮어씀                                                      | 선택      | —           |
+
+### `agent-bolt list-packs`
+
+카탈로그가 제공하는 패키지 목록을 조회합니다.
+
+```text
+agent-bolt list-packs [options]
+```
+
+| 옵션               | 설명            | 필수/선택 | 기본값        |
+| ------------------ | --------------- | --------- | ------------- |
+| `--source <alias>` | 조회할 카탈로그 | 선택      | 전체 카탈로그 |
+
+### `agent-bolt list-items`
+
+패키지별 아이템 목록을 조회합니다.
+
+```text
+agent-bolt list-items [options]
+```
+
+| 옵션               | 설명                       | 필수/선택 | 기본값        |
+| ------------------ | -------------------------- | --------- | ------------- |
+| `--source <alias>` | 조회할 카탈로그            | 선택      | 전체 카탈로그 |
+| `--packs <list>`   | 조회할 패키지. 콤마로 구분 | 선택      | 전체 패키지   |
+
+### `agent-bolt show-item`
+
+아이템 하나의 본문·설정·에셋을 자세히 확인합니다.
+
+```text
+agent-bolt show-item --source <alias> --pack <name> --item <name> [options]
+```
+
+| 옵션               | 설명                   | 필수/선택 | 기본값 |
+| ------------------ | ---------------------- | --------- | ------ |
+| `--source <alias>` | 아이템이 속한 카탈로그 | 필수      | —      |
+| `--pack <name>`    | 아이템이 속한 패키지   | 필수      | —      |
+| `--item <name>`    | 조회할 아이템 이름     | 필수      | —      |
+
+### `agent-bolt add-pack`
+
+패키지 전체를 설정에 추가합니다.
+
+```text
+agent-bolt add-pack --source <alias> --packs <list>
+```
+
+| 옵션               | 설명                            | 필수/선택 | 기본값 |
+| ------------------ | ------------------------------- | --------- | ------ |
+| `--source <alias>` | 대상 카탈로그                   | 필수      | —      |
+| `--packs <list>`   | 추가할 패키지 이름. 콤마로 구분 | 필수      | —      |
+
+### `agent-bolt add-item`
+
+특정 아이템만 설정에 추가합니다. 패키지 항목이 없으면 만들어 둡니다.
+
+```text
+agent-bolt add-item --source <alias> --pack <name> [options]
+```
+
+| 옵션                  | 설명                                   | 필수/선택 | 기본값 |
+| --------------------- | -------------------------------------- | --------- | ------ |
+| `--source <alias>`    | 대상 카탈로그                          | 필수      | —      |
+| `--pack <name>`       | 대상 패키지                            | 필수      | —      |
+| `--skills <list>`     | 추가할 스킬 이름. 콤마로 구분          | 선택      | —      |
+| `--agents <list>`     | 추가할 서브 에이전트 이름. 콤마로 구분 | 선택      | —      |
+| `--guidelines <list>` | 추가할 가이드라인 이름. 콤마로 구분    | 선택      | —      |
+
+### `agent-bolt remove-pack`
+
+설정에서 패키지 전체를 제거합니다.
+
+```text
+agent-bolt remove-pack --source <alias> --packs <list>
+```
+
+| 옵션               | 설명                            | 필수/선택 | 기본값 |
+| ------------------ | ------------------------------- | --------- | ------ |
+| `--source <alias>` | 대상 카탈로그                   | 필수      | —      |
+| `--packs <list>`   | 제거할 패키지 이름. 콤마로 구분 | 필수      | —      |
+
+### `agent-bolt remove-item`
+
+설정에서 특정 아이템을 제거합니다.
+
+```text
+agent-bolt remove-item --source <alias> --pack <name> [options]
+```
+
+| 옵션                  | 설명                                   | 필수/선택 | 기본값 |
+| --------------------- | -------------------------------------- | --------- | ------ |
+| `--source <alias>`    | 대상 카탈로그                          | 필수      | —      |
+| `--pack <name>`       | 대상 패키지                            | 필수      | —      |
+| `--skills <list>`     | 제거할 스킬 이름. 콤마로 구분          | 선택      | —      |
+| `--agents <list>`     | 제거할 서브 에이전트 이름. 콤마로 구분 | 선택      | —      |
+| `--guidelines <list>` | 제거할 가이드라인 이름. 콤마로 구분    | 선택      | —      |
+
+### `agent-bolt sync`
+
+설정에 담긴 아이템을 각 에이전트에 설치합니다.
+
+```text
+agent-bolt sync
+```
+
+### `agent-bolt check`
+
+설치 상태가 설정 파일과 어긋났는지 검사합니다. 어긋나면 종료 코드 1 을 반환합니다.
+
+```text
+agent-bolt check
+```
+
+다음은 카탈로그를 만드는 쪽의 `catalog` 명령입니다.
+
+### `agent-bolt catalog init`
+
+매니페스트(`catalog.json`)와 패키지 스캐폴드(`packs/`)를 생성합니다.
+
+```text
+agent-bolt catalog init [options]
+```
+
+| 옵션                   | 설명              | 필수/선택 | 기본값        |
+| ---------------------- | ----------------- | --------- | ------------- |
+| `--dir <dir>`          | 카탈로그 디렉터리 | 선택      | 현재 디렉터리 |
+| `--name <name>`        | 카탈로그 이름     | 선택      | 디렉터리 이름 |
+| `--description <text>` | 카탈로그 설명     | 선택      | "TODO: ..."   |
+
+### `agent-bolt catalog new-pack`
+
+매니페스트(`pack.json`)와 패키지 스캐폴드(`<pack-name>/`)를 생성합니다.
+
+```text
+agent-bolt catalog new-pack <name> [options]
+```
+
+| 옵션                   | 설명              | 필수/선택 | 기본값        |
+| ---------------------- | ----------------- | --------- | ------------- |
+| `--dir <dir>`          | 카탈로그 디렉터리 | 선택      | 현재 디렉터리 |
+| `--description <text>` | 패키지 설명       | 선택      | "TODO: ..."   |
+
+### `agent-bolt catalog new-skill · new-agent · new-guideline`
+
+매니페스트와 아이템 스캐폴드(`<type>/<name>/`)를 생성합니다.
+
+```text
+agent-bolt catalog new-skill <name> --pack <name> [options]
+agent-bolt catalog new-agent <name> --pack <name> [options]
+agent-bolt catalog new-guideline <name> --pack <name> [options]
+```
+
+| 옵션                   | 설명                 | 필수/선택 | 기본값        |
+| ---------------------- | -------------------- | --------- | ------------- |
+| `--pack <name>`        | 아이템이 속할 패키지 | 필수      | —             |
+| `--dir <dir>`          | 카탈로그 디렉터리    | 선택      | 현재 디렉터리 |
+| `--description <text>` | 아이템 설명          | 선택      | "TODO: ..."   |
+
+### `agent-bolt catalog validate`
+
+카탈로그의 구조·매니페스트·무결성을 검사합니다. 문제가 있으면 종료 코드 1 을 반환합니다.
+
+```text
+agent-bolt catalog validate [options]
+```
+
+| 옵션          | 설명              | 필수/선택 | 기본값        |
+| ------------- | ----------------- | --------- | ------------- |
+| `--dir <dir>` | 카탈로그 디렉터리 | 선택      | 현재 디렉터리 |
+
+## License
+
+이 프로젝트는 MIT License 로 배포됩니다. 전문은 [LICENSE](LICENSE)에서 확인할 수 있습니다.
