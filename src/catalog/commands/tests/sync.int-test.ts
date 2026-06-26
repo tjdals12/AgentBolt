@@ -219,7 +219,7 @@ describe('sync (integration)', () => {
       },
     };
     const config: ConfigSpec = {
-      tools: ['claude', 'codex'],
+      tools: ['claude', 'codex', 'cursor'],
       sources: { dev: { type: 'local', path: './catalog' } },
       packs: {
         dev: { demo: { guidelines: { rules: { load: 'conditional', glob: ['src/**/*.ts'] } } } },
@@ -235,6 +235,10 @@ describe('sync (integration)', () => {
     const agents = project.read('AGENTS.md');
     expect(agents).toMatch(/applies only when/i);
     expect(agents).toContain('`src/**/*.ts`');
+
+    const cursorRule = project.read('.cursor/rules/bolt-dev-demo-rules.mdc');
+    expect(cursorRule).toContain('globs: src/**/*.ts');
+    expect(cursorRule).toContain('alwaysApply: false');
   });
 
   it('does not create AGENTS.md when there are no guidelines (E11)', () => {
@@ -253,5 +257,36 @@ describe('sync (integration)', () => {
 
     expect(project.exists('AGENTS.md')).toBe(false);
     expect(project.exists('.codex/agents/bolt-dev-demo-reviewer.toml')).toBe(true);
+  });
+
+  it('installs all three item types under .cursor with an .mdc always-rule (E12)', () => {
+    const config: ConfigSpec = {
+      tools: ['cursor'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: {
+            skills: ['greet'],
+            agents: ['reviewer'],
+            guidelines: { rules: { load: 'always' } },
+          },
+        },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    sync(project);
+
+    expect(project.exists('.cursor/skills/bolt-dev-demo-greet/SKILL.md')).toBe(true);
+    expect(project.read('.cursor/skills/bolt-dev-demo-greet/SKILL.md')).toContain('Say hi.');
+    expect(project.read('.cursor/skills/bolt-dev-demo-greet/SKILL.md')).toContain(
+      'name: bolt-dev-demo-greet',
+    );
+    expect(project.exists('.cursor/agents/bolt-dev-demo-reviewer.md')).toBe(true);
+
+    const rule = project.read('.cursor/rules/bolt-dev-demo-rules.mdc');
+    expect(rule).toContain('alwaysApply: true');
+    expect(rule).toContain('Always be nice.');
+
+    expect(project.exists('AGENTS.md')).toBe(false);
   });
 });

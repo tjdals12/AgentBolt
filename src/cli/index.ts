@@ -34,7 +34,7 @@ program.name('agent-bolt').version(version);
 program
   .command('init')
   .description('Initialize agent playbook in this project')
-  .option('--tools <list>', 'codex,claude (omit to pick interactively)')
+  .option('--tools <list>', 'codex,claude,cursor (omit to pick interactively)')
   .option(
     '--source <spec>',
     'Catalog source as <alias>=<type>:<location> (repeatable). e.g. team=git:https://github.com/acme/catalog.git',
@@ -47,10 +47,10 @@ program
     dedent`
     Examples:
       $ agent-bolt init
-      $ agent-bolt init --tools=codex,claude
-      $ agent-bolt init --tools=codex,claude --source=dev=local:./catalog
-      $ agent-bolt init --tools=codex,claude --source common=local:./catalog --source acme-team=git:https://github.com/acme/catalog.git
-      $ agent-bolt init --tools=codex,claude --force
+      $ agent-bolt init --tools=codex,claude,cursor
+      $ agent-bolt init --tools=codex,claude,cursor --source=dev=local:./catalog
+      $ agent-bolt init --tools=codex,claude,cursor --source common=local:./catalog --source acme-team=git:https://github.com/acme/catalog.git
+      $ agent-bolt init --tools=codex,claude,cursor --force
   `,
   )
   .action(async (options: { tools?: string; source: string[]; force: boolean }) => {

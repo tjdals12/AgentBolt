@@ -31,7 +31,7 @@ export const ConfigSchema = z.object({
   version: z.literal(CONFIG_VERSION),
   tools: z
     .array(z.enum(TOOL_IDS))
-    .meta({ description: 'AI tools to install for', examples: [['codex', 'claude']] }),
+    .meta({ description: 'AI tools to install for', examples: [['codex', 'claude', 'cursor']] }),
   sources: SourcesSchema.meta({ description: 'catalogs to pull assets from (alias → source)' }),
   packs: PacksSchema.default({}),
 });

@@ -80,6 +80,7 @@ Running `init` lets you pick the agents to use and add a catalog. The supported 
 | ----------- | --------------- |
 | Claude Code | `claude`        |
 | Codex       | `codex`         |
+| Cursor      | `cursor`        |
 
 A catalog can live in a local directory or a Git repository.
 
@@ -101,7 +102,7 @@ A catalog can live in a local directory, or be pushed to a Git repository to sha
 If you're just getting started, you can jump right in with an [existing catalog](https://github.com/tjdals12/AgentBoltCatalog.git).
 
 ```bash
-agent-bolt init --tools=claude,codex --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
+agent-bolt init --tools=claude,codex,cursor --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
 ```
 
 ### Browse the catalog
@@ -231,6 +232,17 @@ your-project/
 │   │   └── ...
 │   └── rules/
 │       ├── bolt-common-common-commit-rules.md
+│       └── ...
+├── .cursor/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   ├── agents/
+│   │   ├── bolt-common-common-code-reviewer.md
+│   │   └── ...
+│   └── rules/
+│       ├── bolt-common-common-commit-rules.mdc
 │       └── ...
 ├── .codex/
 │   ├── skills/
@@ -448,7 +460,7 @@ agent-bolt init [options]
 
 | Option            | Description                                                                          | Required | Default            |
 | ----------------- | ------------------------------------------------------------------------------------ | -------- | ------------------ |
-| `--tools <list>`  | Agents to install items into. Comma-separated (e.g. `claude,codex`)                  | Optional | Interactive prompt |
+| `--tools <list>`  | Agents to install items into. Comma-separated (e.g. `claude,codex,cursor`)           | Optional | Interactive prompt |
 | `--source <spec>` | Catalog to pull items from. `<alias>=<type>:<location>` (e.g. `dev=local:./catalog`) | Optional | Interactive prompt |
 | `--force`         | Overwrite an existing config file                                                    | Optional | —                  |
 

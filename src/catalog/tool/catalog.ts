@@ -13,6 +13,11 @@ export const SUPPORTED_TOOLS: SupportedTools = {
     displayName: 'Codex',
     marker: '.codex',
   },
+  cursor: {
+    id: 'cursor',
+    displayName: 'Cursor',
+    marker: '.cursor',
+  },
 };
 
 export function listTools(): Tool[] {
