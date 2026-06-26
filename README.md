@@ -21,6 +21,17 @@ Juggling several agents like Claude, Codex, and Gemini? Each one stores skills, 
 
 AgentBolt is a CLI that keeps your skills, guidelines, and subagents in one place and installs them into each agent in the format it expects. Maintain a single source, and reuse it as-is across agents, projects, and teams.
 
+## Contents
+
+- [Core Concepts](#core-concepts)
+- [Supported agents](#supported-agents)
+- [Getting started](#getting-started)
+- [How to use](#how-to-use)
+- [Creating a catalog](#creating-a-catalog)
+- [Project structure](#project-structure)
+- [Commands](#commands)
+- [License](#license)
+
 ## Core Concepts
 
 AgentBolt pulls skills, subagents, and guidelines from a repository outside your project, then converts and installs them into the agents you use. That repository is called a **catalog**, the skills, subagents, and guidelines are called **items**, and a set of related items grouped together is called a **package**.
@@ -57,6 +68,16 @@ Run `agent-bolt sync` to update it.
 
 If the instructions file (e.g. `AGENTS.md`) doesn't exist yet, AgentBolt creates it. If it already exists, AgentBolt looks for these markers and updates only what's between them — so add the `<!-- bolt:start -->` and `<!-- bolt:end -->` markers yourself, wherever you want the guidelines to go.
 
+## Supported agents
+
+AgentBolt installs each item into the location its target agent expects.
+
+| Agent       | `--tools` | Skills            | Subagents         | Guidelines                  |
+| ----------- | --------- | ----------------- | ----------------- | --------------------------- |
+| Claude Code | `claude`  | `.claude/skills/` | `.claude/agents/` | `.claude/rules/`            |
+| Codex       | `codex`   | `.codex/skills/`  | `.codex/agents/`  | `AGENTS.md` (managed block) |
+| Cursor      | `cursor`  | `.cursor/skills/` | `.cursor/agents/` | `.cursor/rules/`            |
+
 ## Getting started
 
 **Requires Node.js 24 or later.**
@@ -74,13 +95,7 @@ cd your-project
 agent-bolt init
 ```
 
-Running `init` lets you pick the agents to use and add a catalog. The supported agents are:
-
-| Agent       | `--tools` value |
-| ----------- | --------------- |
-| Claude Code | `claude`        |
-| Codex       | `codex`         |
-| Cursor      | `cursor`        |
+Running `init` lets you pick the agents to use and add a catalog. For the agents you can choose and their `--tools` values, see [Supported agents](#supported-agents).
 
 A catalog can live in a local directory or a Git repository.
 
