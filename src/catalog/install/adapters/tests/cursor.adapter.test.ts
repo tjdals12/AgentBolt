@@ -60,20 +60,21 @@ describe('CursorAdapter.renderGuideline', () => {
     expect(rendered.content.endsWith('Write good commits.\n')).toBe(true);
   });
 
-  it('serializes conditional globs as a comma-joined string, not an array (U-CURSOR-2)', () => {
+  it('serializes conditional globs unquoted and comma-joined without spaces (U-CURSOR-2)', () => {
     const rendered = adapter.renderGuideline('src', 'pack', makeGuideline(), {
       load: 'conditional',
-      glob: ['src/**/*.tsx', 'src/**/*.ts'],
+      glob: ['**/*.ts', '**/*.tsx'],
     });
 
     if (rendered.kind !== 'rule-file') {
       throw new Error('expected a rule-file guideline');
     }
 
-    const frontmatter = parseFrontmatter(rendered.content);
-    expect(frontmatter.alwaysApply).toBe(false);
-    expect(typeof frontmatter.globs).toBe('string');
-    expect(frontmatter.globs).toBe('src/**/*.tsx, src/**/*.ts');
+    // Cursor reads a quoted value as a single literal pattern, so globs must be
+    // raw, comma-separated, and space-free — not wrapped in quotes by YAML.
+    expect(rendered.content).toContain('globs: **/*.ts,**/*.tsx');
+    expect(rendered.content).not.toContain('globs: "');
+    expect(rendered.content).toContain('alwaysApply: false');
   });
 });
 

@@ -60,14 +60,16 @@ export class CursorAdapter extends Adapter {
     const { name: guidelineName, description, body } = guideline;
     const installName = this.buildInstallName(sourceAlias, packName, guidelineName);
 
-    const data: Record<string, unknown> = { description };
+    const lines = [this.formatFrontmatter({ description })];
     if (guidelineSelection.load === 'conditional') {
-      data.globs = guidelineSelection.glob.join(', ');
-      data.alwaysApply = false;
+      // Cursor reads a quoted globs value as a single literal pattern, so emit it
+      // raw (unquoted, comma-separated, no spaces) instead of through YAML.
+      lines.push(`globs: ${guidelineSelection.glob.join(',')}`);
+      lines.push('alwaysApply: false');
     } else {
-      data.alwaysApply = true;
+      lines.push('alwaysApply: true');
     }
-    const frontmatter = this.formatFrontmatter(data);
+    const frontmatter = lines.join('\n');
 
     const filePath = path.join(this.rulesDir, `${installName}.mdc`);
     const content = `---\n${frontmatter}\n---\n\n${body}\n`;

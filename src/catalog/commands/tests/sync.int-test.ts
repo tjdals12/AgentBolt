@@ -293,6 +293,29 @@ describe('sync (integration)', () => {
     expect(project.exists('AGENTS.md')).toBe(false);
   });
 
+  it('writes a cursor conditional rule with unquoted, comma-joined globs (E15)', () => {
+    const catalog: CatalogSpec = {
+      packs: {
+        demo: { guidelines: { rules: { body: 'Lint TS.', recommended: { load: 'always' } } } },
+      },
+    };
+    const config: ConfigSpec = {
+      tools: ['cursor'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: { guidelines: { rules: { load: 'conditional', glob: ['**/*.ts', '**/*.tsx'] } } },
+        },
+      },
+    };
+    const project = setup(catalog, config);
+    sync(project);
+
+    const rule = project.read('.cursor/rules/bolt-dev-demo-rules.mdc');
+    expect(rule).toContain('globs: **/*.ts,**/*.tsx');
+    expect(rule).not.toContain('globs: "');
+  });
+
   it('installs all three item types under .github with an always instructions file (E13)', () => {
     const config: ConfigSpec = {
       tools: ['copilot'],
