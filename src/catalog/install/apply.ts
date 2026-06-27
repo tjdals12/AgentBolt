@@ -9,7 +9,8 @@ import {
   buildManagedBlock,
   buildManagedBlockContent,
   replaceManagedBlock,
-} from './managed-block.js';
+} from './managed-block/render.js';
+import { groupManagedBlocksByFile } from './managed-block/group.js';
 import { classifyChange, classifySkill } from './classify.js';
 
 export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet {
@@ -21,7 +22,7 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
   const changeSet: ChangeSet = {};
 
   for (const toolPlan of toolPlans) {
-    const { tool, renderedSkills, renderedAgents, renderedGuidelines, managedBlock } = toolPlan;
+    const { tool, renderedSkills, renderedAgents, renderedGuidelines } = toolPlan;
 
     const syncChanges: SyncChange[] = [];
 
@@ -87,29 +88,29 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
       }
     }
 
-    if (managedBlock) {
-      const { filePath, fragments } = managedBlock;
-      const blockFilePath = path.join(projectPath, filePath);
-      const blockFileDir = path.dirname(blockFilePath);
+    changeSet[tool] = syncChanges;
+  }
 
-      const before = fs.existsSync(blockFilePath) ? fs.readFileSync(blockFilePath, 'utf-8') : null;
+  const managedBlocks = groupManagedBlocksByFile(toolPlans);
+  for (const { filePath, fragments, tools } of managedBlocks) {
+    const blockFilePath = path.join(projectPath, filePath);
+    const blockFileDir = path.dirname(blockFilePath);
 
-      const blockContent = buildManagedBlockContent(fragments);
-      const content =
-        before === null
-          ? buildManagedBlock(blockContent)
-          : replaceManagedBlock(before, blockContent);
+    const before = fs.existsSync(blockFilePath) ? fs.readFileSync(blockFilePath, 'utf-8') : null;
 
-      fs.mkdirSync(blockFileDir, { recursive: true });
-      fs.writeFileSync(blockFilePath, content, 'utf-8');
+    const blockContent = buildManagedBlockContent(fragments);
+    const content =
+      before === null ? buildManagedBlock(blockContent) : replaceManagedBlock(before, blockContent);
 
-      const status = classifyChange(before, content);
-      if (status) {
-        syncChanges.push({ label: `${filePath} (managed block)`, status });
+    fs.mkdirSync(blockFileDir, { recursive: true });
+    fs.writeFileSync(blockFilePath, content, 'utf-8');
+
+    const status = classifyChange(before, content);
+    if (status) {
+      for (const tool of tools) {
+        (changeSet[tool] ??= []).push({ label: `${filePath} (managed block)`, status });
       }
     }
-
-    changeSet[tool] = syncChanges;
   }
 
   const removed = findOrphans(previousItems, currentItems);
