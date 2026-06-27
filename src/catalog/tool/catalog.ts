@@ -18,6 +18,11 @@ export const SUPPORTED_TOOLS: SupportedTools = {
     displayName: 'Cursor',
     marker: '.cursor',
   },
+  copilot: {
+    id: 'copilot',
+    displayName: 'GitHub Copilot',
+    marker: '.github/copilot-instructions.md',
+  },
 };
 
 export function listTools(): Tool[] {
