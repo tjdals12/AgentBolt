@@ -21,6 +21,17 @@ Claude, Codex, Gemini 등 여러 에이전트를 함께 사용하면서 불편�
 
 AgentBolt는 스킬과 가이드라인, 서브 에이전트를 한곳에 모아 관리하고, 각 에이전트에 맞는 형식으로 변환해 설치하는 CLI 도구입니다. 하나의 원본만 관리하면, 여러 에이전트와 여러 프로젝트, 여러 팀에서 그대로 사용할 수 있습니다.
 
+## 목차
+
+- [핵심 개념](#핵심-개념)
+- [지원 에이전트](#지원-에이전트)
+- [시작하기](#시작하기)
+- [사용 방법](#사용-방법)
+- [카탈로그 생성](#카탈로그-생성)
+- [프로젝트 구조](#프로젝트-구조)
+- [명령어](#명령어)
+- [License](#license)
+
 ## 핵심 개념
 
 AgentBolt는 프로젝트 외부의 저장소에 모아 둔 스킬, 서브 에이전트, 가이드라인을 가져와, 프로젝트에서 사용하는 에이전트에 맞는 형식으로 변환해 설치합니다. 여기서 이 저장소를 카탈로그라고 하고, 스킬, 서브 에이전트, 가이드라인을 아이템이라고 하며, 관련된 아이템을 하나로 묶은 것을 패키지라고 합니다.
@@ -57,6 +68,20 @@ Run `agent-bolt sync` to update it.
 
 지침 파일(예: `AGENTS.md`)이 아직 없으면 AgentBolt가 새로 만듭니다. 이미 있으면 이 마커를 찾아 그 사이의 내용만 갱신하므로, 가이드라인을 넣고 싶은 위치에 `<!-- bolt:start -->`와 `<!-- bolt:end -->` 마커를 직접 추가해야 합니다.
 
+## 지원 에이전트
+
+AgentBolt는 각 아이템을 대상 에이전트가 기대하는 위치에 설치합니다.
+
+| 에이전트       | `--tools`  | 스킬                | 서브 에이전트       | 가이드라인              |
+| -------------- | ---------- | ------------------- | ------------------- | ----------------------- |
+| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `.claude/rules/`        |
+| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (관리 블록) |
+| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `.cursor/rules/`        |
+| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/instructions/` |
+| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (관리 블록) |
+
+Codex와 OpenCode는 같은 `AGENTS.md`를 읽기 때문에, 둘 다 사용하면 두 에이전트의 가이드라인이 그 한 파일의 관리 블록에 함께 담깁니다.
+
 ## 시작하기
 
 **Node.js 24 이상이 필요합니다.**
@@ -74,12 +99,7 @@ cd your-project
 agent-bolt init
 ```
 
-`init`을 실행하면 사용할 에이전트를 선택하고, 카탈로그를 추가합니다. 지원하는 에이전트는 다음과 같습니다.
-
-| 에이전트    | `--tools` 값 |
-| ----------- | ------------ |
-| Claude Code | `claude`     |
-| Codex       | `codex`      |
+`init`을 실행하면 사용할 에이전트를 선택하고, 카탈로그를 추가합니다. 선택할 수 있는 에이전트와 `--tools` 값은 [지원 에이전트](#지원-에이전트)를 참고하세요.
 
 카탈로그는 로컬 디렉터리나 Git 저장소에 둘 수 있습니다.
 
@@ -101,7 +121,7 @@ AgentBolt는 카탈로그에서 아이템을 가져와 에이전트에 설치합
 처음이라면 [이미 만들어진 카탈로그](https://github.com/tjdals12/AgentBoltCatalog.git)로 바로 시작할 수 있습니다.
 
 ```bash
-agent-bolt init --tools=claude,codex --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
+agent-bolt init --tools=claude,codex,cursor,copilot,opencode --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
 ```
 
 ### 카탈로그 둘러보기
@@ -232,6 +252,17 @@ your-project/
 │   └── rules/
 │       ├── bolt-common-common-commit-rules.md
 │       └── ...
+├── .cursor/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   ├── agents/
+│   │   ├── bolt-common-common-code-reviewer.md
+│   │   └── ...
+│   └── rules/
+│       ├── bolt-common-common-commit-rules.mdc
+│       └── ...
 ├── .codex/
 │   ├── skills/
 │   │   ├── bolt-common-common-create-commit/
@@ -240,7 +271,26 @@ your-project/
 │   └── agents/
 │       ├── bolt-common-common-code-reviewer.toml
 │       └── ...
-└── AGENTS.md   # Codex 가이드라인이 관리 블록으로 누적
+├── .github/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   ├── agents/
+│   │   ├── bolt-common-common-code-reviewer.agent.md
+│   │   └── ...
+│   └── instructions/
+│       ├── bolt-common-common-commit-rules.instructions.md
+│       └── ...
+├── .opencode/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   └── agents/
+│       ├── bolt-common-common-code-reviewer.md
+│       └── ...
+└── AGENTS.md   # Codex와 OpenCode 가이드라인이 공유 관리 블록으로 누적
 ```
 
 ### 설치 상태 점검하기
@@ -446,11 +496,11 @@ packs:
 agent-bolt init [options]
 ```
 
-| 옵션              | 설명                                                                         | 필수/선택 | 기본값      |
-| ----------------- | ---------------------------------------------------------------------------- | --------- | ----------- |
-| `--tools <list>`  | 아이템을 설치할 에이전트. 콤마로 구분 (예: `claude,codex`)                   | 선택      | 대화형 선택 |
-| `--source <spec>` | 아이템을 가져올 카탈로그. `<별칭>=<형식>:<위치>` (예: `dev=local:./catalog`) | 선택      | 대화형 선택 |
-| `--force`         | 기존 설정 파일을 덮어씀                                                      | 선택      | —           |
+| 옵션              | 설명                                                                               | 필수/선택 | 기본값      |
+| ----------------- | ---------------------------------------------------------------------------------- | --------- | ----------- |
+| `--tools <list>`  | 아이템을 설치할 에이전트. 콤마로 구분 (예: `claude,codex,cursor,copilot,opencode`) | 선택      | 대화형 선택 |
+| `--source <spec>` | 아이템을 가져올 카탈로그. `<별칭>=<형식>:<위치>` (예: `dev=local:./catalog`)       | 선택      | 대화형 선택 |
+| `--force`         | 기존 설정 파일을 덮어씀                                                            | 선택      | —           |
 
 ### `agent-bolt list-packs`
 

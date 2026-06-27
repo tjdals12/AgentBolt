@@ -145,6 +145,12 @@ vite.config.ts.timestamp-*
 .agent-bolt/
 .claude/
 .codex/
+.cursor/
+.github/skills/
+.github/agents/
+.github/instructions/
+.opencode/skills/
+.opencode/agents/
 AGENTS.md
 CLAUDE.md
 

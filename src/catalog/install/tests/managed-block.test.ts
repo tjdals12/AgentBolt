@@ -4,7 +4,10 @@ import {
   buildManagedBlock,
   buildManagedBlockContent,
   replaceManagedBlock,
-} from '#catalog/install/managed-block.js';
+} from '#catalog/install/managed-block/render.js';
+import { groupManagedBlocksByFile } from '#catalog/install/managed-block/group.js';
+import type { ToolPlan } from '#catalog/install/model.js';
+import type { ToolId } from '#catalog/tool/model.js';
 
 const START = '<!-- bolt:start -->';
 const END = '<!-- bolt:end -->';
@@ -66,5 +69,49 @@ describe('buildManagedBlockContent', () => {
 
   it('joins fragments with blank lines and trims trailing whitespace (U-MB-6b)', () => {
     expect(buildManagedBlockContent(['a   ', 'b\n'])).toBe('\na\n\n\nb\n');
+  });
+});
+
+describe('groupManagedBlocksByFile', () => {
+  function plan(tool: ToolId, managedBlock?: { filePath: string; fragments: string[] }): ToolPlan {
+    return {
+      tool,
+      renderedSkills: [],
+      renderedAgents: [],
+      renderedGuidelines: [],
+      managedBlock,
+    };
+  }
+
+  it('collapses tools sharing a file into one block, recording every contributor (U-MB-7)', () => {
+    const plans = [
+      plan('codex', { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'] }),
+      plan('claude', { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'] }),
+    ];
+
+    const result = groupManagedBlocksByFile(plans);
+
+    expect(result).toEqual([
+      { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'], tools: ['codex', 'claude'] },
+    ]);
+  });
+
+  it('keeps blocks for different files separate (U-MB-8)', () => {
+    const plans = [
+      plan('codex', { filePath: 'AGENTS.md', fragments: ['frag-a'] }),
+      plan('claude', { filePath: 'CLAUDE.md', fragments: ['frag-b'] }),
+    ];
+
+    const result = groupManagedBlocksByFile(plans);
+
+    expect(result.map((block) => block.filePath)).toEqual(['AGENTS.md', 'CLAUDE.md']);
+  });
+
+  it('skips tools that have no managed block (U-MB-9)', () => {
+    const plans = [plan('codex'), plan('claude', { filePath: 'AGENTS.md', fragments: ['frag-a'] })];
+
+    const result = groupManagedBlocksByFile(plans);
+
+    expect(result).toEqual([{ filePath: 'AGENTS.md', fragments: ['frag-a'], tools: ['claude'] }]);
   });
 });

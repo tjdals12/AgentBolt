@@ -219,7 +219,7 @@ describe('sync (integration)', () => {
       },
     };
     const config: ConfigSpec = {
-      tools: ['claude', 'codex'],
+      tools: ['claude', 'codex', 'cursor', 'copilot'],
       sources: { dev: { type: 'local', path: './catalog' } },
       packs: {
         dev: { demo: { guidelines: { rules: { load: 'conditional', glob: ['src/**/*.ts'] } } } },
@@ -235,6 +235,13 @@ describe('sync (integration)', () => {
     const agents = project.read('AGENTS.md');
     expect(agents).toMatch(/applies only when/i);
     expect(agents).toContain('`src/**/*.ts`');
+
+    const cursorRule = project.read('.cursor/rules/bolt-dev-demo-rules.mdc');
+    expect(cursorRule).toContain('globs: src/**/*.ts');
+    expect(cursorRule).toContain('alwaysApply: false');
+
+    const copilotRule = project.read('.github/instructions/bolt-dev-demo-rules.instructions.md');
+    expect(copilotRule).toContain('applyTo: src/**/*.ts');
   });
 
   it('does not create AGENTS.md when there are no guidelines (E11)', () => {
@@ -253,5 +260,150 @@ describe('sync (integration)', () => {
 
     expect(project.exists('AGENTS.md')).toBe(false);
     expect(project.exists('.codex/agents/bolt-dev-demo-reviewer.toml')).toBe(true);
+  });
+
+  it('installs all three item types under .cursor with an .mdc always-rule (E12)', () => {
+    const config: ConfigSpec = {
+      tools: ['cursor'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: {
+            skills: ['greet'],
+            agents: ['reviewer'],
+            guidelines: { rules: { load: 'always' } },
+          },
+        },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    sync(project);
+
+    expect(project.exists('.cursor/skills/bolt-dev-demo-greet/SKILL.md')).toBe(true);
+    expect(project.read('.cursor/skills/bolt-dev-demo-greet/SKILL.md')).toContain('Say hi.');
+    expect(project.read('.cursor/skills/bolt-dev-demo-greet/SKILL.md')).toContain(
+      'name: bolt-dev-demo-greet',
+    );
+    expect(project.exists('.cursor/agents/bolt-dev-demo-reviewer.md')).toBe(true);
+
+    const rule = project.read('.cursor/rules/bolt-dev-demo-rules.mdc');
+    expect(rule).toContain('alwaysApply: true');
+    expect(rule).toContain('Always be nice.');
+
+    expect(project.exists('AGENTS.md')).toBe(false);
+  });
+
+  it('writes a cursor conditional rule with unquoted, comma-joined globs (E15)', () => {
+    const catalog: CatalogSpec = {
+      packs: {
+        demo: { guidelines: { rules: { body: 'Lint TS.', recommended: { load: 'always' } } } },
+      },
+    };
+    const config: ConfigSpec = {
+      tools: ['cursor'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: { guidelines: { rules: { load: 'conditional', glob: ['**/*.ts', '**/*.tsx'] } } },
+        },
+      },
+    };
+    const project = setup(catalog, config);
+    sync(project);
+
+    const rule = project.read('.cursor/rules/bolt-dev-demo-rules.mdc');
+    expect(rule).toContain('globs: **/*.ts,**/*.tsx');
+    expect(rule).not.toContain('globs: "');
+  });
+
+  it('installs all three item types under .github with an always instructions file (E13)', () => {
+    const config: ConfigSpec = {
+      tools: ['copilot'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: {
+            skills: ['greet'],
+            agents: ['reviewer'],
+            guidelines: { rules: { load: 'always' } },
+          },
+        },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    sync(project);
+
+    expect(project.exists('.github/skills/bolt-dev-demo-greet/SKILL.md')).toBe(true);
+    expect(project.read('.github/skills/bolt-dev-demo-greet/SKILL.md')).toContain('Say hi.');
+    expect(project.read('.github/skills/bolt-dev-demo-greet/SKILL.md')).toContain(
+      'name: bolt-dev-demo-greet',
+    );
+    expect(project.exists('.github/agents/bolt-dev-demo-reviewer.agent.md')).toBe(true);
+
+    const rule = project.read('.github/instructions/bolt-dev-demo-rules.instructions.md');
+    expect(rule).toContain('applyTo: "**"');
+    expect(rule).toContain('Always be nice.');
+
+    expect(project.exists('AGENTS.md')).toBe(false);
+  });
+
+  it('installs all three item types under .opencode with an AGENTS.md block (E16)', () => {
+    const config: ConfigSpec = {
+      tools: ['opencode'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: {
+            skills: ['greet'],
+            agents: ['reviewer'],
+            guidelines: { rules: { load: 'always' } },
+          },
+        },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    sync(project);
+
+    expect(project.exists('.opencode/skills/bolt-dev-demo-greet/SKILL.md')).toBe(true);
+    expect(project.read('.opencode/skills/bolt-dev-demo-greet/SKILL.md')).toContain('Say hi.');
+    expect(project.read('.opencode/skills/bolt-dev-demo-greet/SKILL.md')).toContain(
+      'name: bolt-dev-demo-greet',
+    );
+
+    const agent = project.read('.opencode/agents/bolt-dev-demo-reviewer.md');
+    expect(agent).toContain('mode: subagent');
+    expect(agent).toContain('Review the code.');
+
+    const agents = project.read('AGENTS.md');
+    expect(agents).toContain('Always be nice.');
+    expect(agents).toContain('<!-- bolt:start -->');
+  });
+
+  it('converges Codex and OpenCode onto a single AGENTS.md block, reported for both (E17)', () => {
+    const config: ConfigSpec = {
+      tools: ['codex', 'opencode'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: { demo: { agents: ['reviewer'], guidelines: { rules: { load: 'always' } } } },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    const result = sync(project);
+
+    expect(project.exists('.codex/agents/bolt-dev-demo-reviewer.toml')).toBe(true);
+    expect(project.exists('.opencode/agents/bolt-dev-demo-reviewer.md')).toBe(true);
+
+    const agents = project.read('AGENTS.md');
+    expect(agents.split('<!-- bolt:start -->').length - 1).toBe(1);
+    expect(agents.split('<!-- bolt:end -->').length - 1).toBe(1);
+    expect(agents.split('Always be nice.').length - 1).toBe(1);
+
+    const codex = result.find((tool) => tool.tool === 'codex');
+    const opencode = result.find((tool) => tool.tool === 'opencode');
+    expect(codex?.changes.some((c) => c.label.includes('AGENTS.md'))).toBe(true);
+    expect(opencode?.changes.some((c) => c.label.includes('AGENTS.md'))).toBe(true);
+
+    const second = sync(project);
+    expect(second.every((tool) => tool.changes.length === 0)).toBe(true);
   });
 });
