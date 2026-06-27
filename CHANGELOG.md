@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/tjdals12/AgentBolt/compare/v1.0.0...v1.1.0) (2026-06-27)
+
+### Features
+
+- add Cursor, GitHub Copilot, and OpenCode as supported agents ([#2](https://github.com/tjdals12/AgentBolt/issues/2)) ([3256427](https://github.com/tjdals12/AgentBolt/commit/3256427bdc501730c94da39e55a4a60b5d99ca6f))
+
 # [1.1.0-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.0.0...v1.1.0-next.1) (2026-06-27)
 
 ### Features
