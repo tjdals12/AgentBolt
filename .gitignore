@@ -149,8 +149,7 @@ vite.config.ts.timestamp-*
 .github/skills/
 .github/agents/
 .github/instructions/
-.opencode/skills/
-.opencode/agents/
+.opencode/
 AGENTS.md
 CLAUDE.md
 
