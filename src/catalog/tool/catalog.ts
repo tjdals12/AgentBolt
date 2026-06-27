@@ -23,6 +23,11 @@ export const SUPPORTED_TOOLS: SupportedTools = {
     displayName: 'GitHub Copilot',
     marker: '.github/copilot-instructions.md',
   },
+  opencode: {
+    id: 'opencode',
+    displayName: 'OpenCode',
+    marker: '.opencode',
+  },
 };
 
 export function listTools(): Tool[] {

@@ -72,12 +72,15 @@ Run `agent-bolt sync` to update it.
 
 AgentBolt는 각 아이템을 대상 에이전트가 기대하는 위치에 설치합니다.
 
-| 에이전트       | `--tools` | 스킬              | 서브 에이전트     | 가이드라인              |
-| -------------- | --------- | ----------------- | ----------------- | ----------------------- |
-| Claude Code    | `claude`  | `.claude/skills/` | `.claude/agents/` | `.claude/rules/`        |
-| Codex          | `codex`   | `.codex/skills/`  | `.codex/agents/`  | `AGENTS.md` (관리 블록) |
-| Cursor         | `cursor`  | `.cursor/skills/` | `.cursor/agents/` | `.cursor/rules/`        |
-| GitHub Copilot | `copilot` | `.github/skills/` | `.github/agents/` | `.github/instructions/` |
+| 에이전트       | `--tools`  | 스킬                | 서브 에이전트       | 가이드라인              |
+| -------------- | ---------- | ------------------- | ------------------- | ----------------------- |
+| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `.claude/rules/`        |
+| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (관리 블록) |
+| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `.cursor/rules/`        |
+| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/instructions/` |
+| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (관리 블록) |
+
+Codex와 OpenCode는 같은 `AGENTS.md`를 읽기 때문에, 둘 다 사용하면 두 에이전트의 가이드라인이 그 한 파일의 관리 블록에 함께 담깁니다.
 
 ## 시작하기
 
@@ -118,7 +121,7 @@ AgentBolt는 카탈로그에서 아이템을 가져와 에이전트에 설치합
 처음이라면 [이미 만들어진 카탈로그](https://github.com/tjdals12/AgentBoltCatalog.git)로 바로 시작할 수 있습니다.
 
 ```bash
-agent-bolt init --tools=claude,codex,cursor,copilot --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
+agent-bolt init --tools=claude,codex,cursor,copilot,opencode --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
 ```
 
 ### 카탈로그 둘러보기
@@ -279,7 +282,15 @@ your-project/
 │   └── instructions/
 │       ├── bolt-common-common-commit-rules.instructions.md
 │       └── ...
-└── AGENTS.md   # Codex 가이드라인이 관리 블록으로 누적
+├── .opencode/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   └── agents/
+│       ├── bolt-common-common-code-reviewer.md
+│       └── ...
+└── AGENTS.md   # Codex와 OpenCode 가이드라인이 공유 관리 블록으로 누적
 ```
 
 ### 설치 상태 점검하기
@@ -485,11 +496,11 @@ packs:
 agent-bolt init [options]
 ```
 
-| 옵션              | 설명                                                                         | 필수/선택 | 기본값      |
-| ----------------- | ---------------------------------------------------------------------------- | --------- | ----------- |
-| `--tools <list>`  | 아이템을 설치할 에이전트. 콤마로 구분 (예: `claude,codex,cursor,copilot`)    | 선택      | 대화형 선택 |
-| `--source <spec>` | 아이템을 가져올 카탈로그. `<별칭>=<형식>:<위치>` (예: `dev=local:./catalog`) | 선택      | 대화형 선택 |
-| `--force`         | 기존 설정 파일을 덮어씀                                                      | 선택      | —           |
+| 옵션              | 설명                                                                               | 필수/선택 | 기본값      |
+| ----------------- | ---------------------------------------------------------------------------------- | --------- | ----------- |
+| `--tools <list>`  | 아이템을 설치할 에이전트. 콤마로 구분 (예: `claude,codex,cursor,copilot,opencode`) | 선택      | 대화형 선택 |
+| `--source <spec>` | 아이템을 가져올 카탈로그. `<별칭>=<형식>:<위치>` (예: `dev=local:./catalog`)       | 선택      | 대화형 선택 |
+| `--force`         | 기존 설정 파일을 덮어씀                                                            | 선택      | —           |
 
 ### `agent-bolt list-packs`
 

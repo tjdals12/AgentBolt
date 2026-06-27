@@ -123,4 +123,18 @@ describe('check (integration)', () => {
     expect(project.mtimeMs('.agent-bolt/install-lock.json')).toBe(lockMtime);
     expect(project.read('.claude/skills/bolt-dev-demo-greet/SKILL.md')).toBe(skillBefore);
   });
+
+  it('reports clean for Codex and OpenCode sharing AGENTS.md after a sync (E18)', () => {
+    const project = createProject();
+    projects.push(project);
+    writeCatalog(project.projectPath, CATALOG);
+    writeConfig(project.projectPath, {
+      tools: ['codex', 'opencode'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: { dev: { demo: { agents: ['reviewer'], guidelines: { rules: { load: 'always' } } } } },
+    });
+    new SyncCommand().execute(project.projectPath);
+
+    expect(check(project).drifted).toBe(false);
+  });
 });

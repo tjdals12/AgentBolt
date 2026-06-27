@@ -5,12 +5,14 @@ import { ClaudeAdapter } from './claude.adapter.js';
 import { CodexAdapter } from './codex.adapter.js';
 import { CursorAdapter } from './cursor.adapter.js';
 import { CopilotAdapter } from './copilot.adapter.js';
+import { OpenCodeAdapter } from './opencode.adapter.js';
 
 const ADAPTERS: Record<ToolId, Adapter> = {
   claude: new ClaudeAdapter(),
   codex: new CodexAdapter(),
   cursor: new CursorAdapter(),
   copilot: new CopilotAdapter(),
+  opencode: new OpenCodeAdapter(),
 };
 
 export function getAdapters(toolIds: ToolId[]): Adapter[] {

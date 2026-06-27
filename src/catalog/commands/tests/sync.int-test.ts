@@ -346,4 +346,64 @@ describe('sync (integration)', () => {
 
     expect(project.exists('AGENTS.md')).toBe(false);
   });
+
+  it('installs all three item types under .opencode with an AGENTS.md block (E16)', () => {
+    const config: ConfigSpec = {
+      tools: ['opencode'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: {
+          demo: {
+            skills: ['greet'],
+            agents: ['reviewer'],
+            guidelines: { rules: { load: 'always' } },
+          },
+        },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    sync(project);
+
+    expect(project.exists('.opencode/skills/bolt-dev-demo-greet/SKILL.md')).toBe(true);
+    expect(project.read('.opencode/skills/bolt-dev-demo-greet/SKILL.md')).toContain('Say hi.');
+    expect(project.read('.opencode/skills/bolt-dev-demo-greet/SKILL.md')).toContain(
+      'name: bolt-dev-demo-greet',
+    );
+
+    const agent = project.read('.opencode/agents/bolt-dev-demo-reviewer.md');
+    expect(agent).toContain('mode: subagent');
+    expect(agent).toContain('Review the code.');
+
+    const agents = project.read('AGENTS.md');
+    expect(agents).toContain('Always be nice.');
+    expect(agents).toContain('<!-- bolt:start -->');
+  });
+
+  it('converges Codex and OpenCode onto a single AGENTS.md block, reported for both (E17)', () => {
+    const config: ConfigSpec = {
+      tools: ['codex', 'opencode'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: {
+        dev: { demo: { agents: ['reviewer'], guidelines: { rules: { load: 'always' } } } },
+      },
+    };
+    const project = setup(DEFAULT_CATALOG, config);
+    const result = sync(project);
+
+    expect(project.exists('.codex/agents/bolt-dev-demo-reviewer.toml')).toBe(true);
+    expect(project.exists('.opencode/agents/bolt-dev-demo-reviewer.md')).toBe(true);
+
+    const agents = project.read('AGENTS.md');
+    expect(agents.split('<!-- bolt:start -->').length - 1).toBe(1);
+    expect(agents.split('<!-- bolt:end -->').length - 1).toBe(1);
+    expect(agents.split('Always be nice.').length - 1).toBe(1);
+
+    const codex = result.find((tool) => tool.tool === 'codex');
+    const opencode = result.find((tool) => tool.tool === 'opencode');
+    expect(codex?.changes.some((c) => c.label.includes('AGENTS.md'))).toBe(true);
+    expect(opencode?.changes.some((c) => c.label.includes('AGENTS.md'))).toBe(true);
+
+    const second = sync(project);
+    expect(second.every((tool) => tool.changes.length === 0)).toBe(true);
+  });
 });

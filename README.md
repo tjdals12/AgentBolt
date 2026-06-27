@@ -72,12 +72,15 @@ If the instructions file (e.g. `AGENTS.md`) doesn't exist yet, AgentBolt creates
 
 AgentBolt installs each item into the location its target agent expects.
 
-| Agent          | `--tools` | Skills            | Subagents         | Guidelines                  |
-| -------------- | --------- | ----------------- | ----------------- | --------------------------- |
-| Claude Code    | `claude`  | `.claude/skills/` | `.claude/agents/` | `.claude/rules/`            |
-| Codex          | `codex`   | `.codex/skills/`  | `.codex/agents/`  | `AGENTS.md` (managed block) |
-| Cursor         | `cursor`  | `.cursor/skills/` | `.cursor/agents/` | `.cursor/rules/`            |
-| GitHub Copilot | `copilot` | `.github/skills/` | `.github/agents/` | `.github/instructions/`     |
+| Agent          | `--tools`  | Skills              | Subagents           | Guidelines                  |
+| -------------- | ---------- | ------------------- | ------------------- | --------------------------- |
+| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `.claude/rules/`            |
+| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (managed block) |
+| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `.cursor/rules/`            |
+| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/instructions/`     |
+| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (managed block) |
+
+Codex and OpenCode both read the shared `AGENTS.md`, so enabling both puts their guidelines in a single managed block in that one file.
 
 ## Getting started
 
@@ -118,7 +121,7 @@ A catalog can live in a local directory, or be pushed to a Git repository to sha
 If you're just getting started, you can jump right in with an [existing catalog](https://github.com/tjdals12/AgentBoltCatalog.git).
 
 ```bash
-agent-bolt init --tools=claude,codex,cursor,copilot --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
+agent-bolt init --tools=claude,codex,cursor,copilot,opencode --source common=git:https://github.com/tjdals12/AgentBoltCatalog.git
 ```
 
 ### Browse the catalog
@@ -279,7 +282,15 @@ your-project/
 │   └── instructions/
 │       ├── bolt-common-common-commit-rules.instructions.md
 │       └── ...
-└── AGENTS.md   # Codex guidelines accumulate in a managed block
+├── .opencode/
+│   ├── skills/
+│   │   ├── bolt-common-common-create-commit/
+│   │   │   └── SKILL.md
+│   │   └── ...
+│   └── agents/
+│       ├── bolt-common-common-code-reviewer.md
+│       └── ...
+└── AGENTS.md   # Codex and OpenCode guidelines accumulate in a shared managed block
 ```
 
 ### Check installation status
@@ -485,11 +496,11 @@ Sets up AgentBolt in your project. Run it with no options to go through it inter
 agent-bolt init [options]
 ```
 
-| Option            | Description                                                                          | Required | Default            |
-| ----------------- | ------------------------------------------------------------------------------------ | -------- | ------------------ |
-| `--tools <list>`  | Agents to install items into. Comma-separated (e.g. `claude,codex,cursor,copilot`)   | Optional | Interactive prompt |
-| `--source <spec>` | Catalog to pull items from. `<alias>=<type>:<location>` (e.g. `dev=local:./catalog`) | Optional | Interactive prompt |
-| `--force`         | Overwrite an existing config file                                                    | Optional | —                  |
+| Option            | Description                                                                                 | Required | Default            |
+| ----------------- | ------------------------------------------------------------------------------------------- | -------- | ------------------ |
+| `--tools <list>`  | Agents to install items into. Comma-separated (e.g. `claude,codex,cursor,copilot,opencode`) | Optional | Interactive prompt |
+| `--source <spec>` | Catalog to pull items from. `<alias>=<type>:<location>` (e.g. `dev=local:./catalog`)        | Optional | Interactive prompt |
+| `--force`         | Overwrite an existing config file                                                           | Optional | —                  |
 
 ### `agent-bolt list-packs`
 
