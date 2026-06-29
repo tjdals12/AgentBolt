@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import type { AddPackResult } from '#catalog/commands/add-pack.js';
-import { countToken, ITEM_STYLE } from '#cli/format.js';
+import { alignPackRows } from '#cli/format.js';
 
 import { printSyncHint } from './shared/sync-hint.js';
 import { Banner } from './shared/banner.js';
@@ -18,27 +18,20 @@ export function renderAddPackResult(result: AddPackResult): void {
     return;
   }
 
+  const rows = alignPackRows(
+    addedPacks.map((pack) => ({
+      name: pack.name,
+      counts: {
+        skills: pack.skills.length,
+        agents: pack.agents.length,
+        guidelines: Object.keys(pack.guidelines).length,
+      },
+    })),
+  );
+
   console.log('');
-  for (const addedPack of addedPacks) {
-    const { name, skills, agents, guidelines } = addedPack;
-
-    const parts: string[] = [];
-    if (skills.length > 0) {
-      parts.push(countToken(ITEM_STYLE.skills, skills.length));
-    }
-
-    if (agents.length > 0) {
-      parts.push(countToken(ITEM_STYLE.agents, agents.length));
-    }
-
-    const guidelineCount = Object.keys(guidelines).length;
-    if (guidelineCount > 0) {
-      parts.push(countToken(ITEM_STYLE.guidelines, guidelineCount));
-    }
-
-    console.log(
-      `${chalk.green('+')} 📂 ${chalk.bold(name)}${parts.length ? `   ${parts.join('  ')}` : ''}`,
-    );
+  for (const row of rows) {
+    console.log(`${chalk.green('+')} 📂 ${chalk.bold(row.paddedName)}  ${row.counts}`);
   }
 
   for (const skippedPackName of skippedPackNames) {

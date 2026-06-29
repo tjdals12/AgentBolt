@@ -1,9 +1,12 @@
+import { checkbox } from '@inquirer/prompts';
 import { isMap } from 'yaml';
 
 import { loadConfig } from '#catalog/config/load.js';
 import type { PackSelection } from '#catalog/config/schema.js';
 import { editConfigFile } from '#catalog/config/write.js';
 import { buildCatalogConfigPath } from '#core/paths.js';
+import { canPrompt } from '#core/tty.js';
+import { alignPackRows } from '#cli/format.js';
 
 export type RemovedPack = {
   name: string;
@@ -20,14 +23,14 @@ export type RemovePackResult = {
 
 export class RemovePackCommand {
   private readonly _source: string;
-  private readonly _packs: string;
+  private readonly _packs?: string;
 
-  constructor(options: { source: string; packs: string }) {
+  constructor(options: { source: string; packs?: string }) {
     this._source = options.source;
     this._packs = options.packs;
   }
 
-  execute(projectPath: string): RemovePackResult {
+  async execute(projectPath: string): Promise<RemovePackResult> {
     const configPath = buildCatalogConfigPath(projectPath);
     const config = loadConfig(configPath);
 
@@ -42,14 +45,24 @@ export class RemovePackCommand {
       throw new Error(`source '${this._source}' not found in ${configPath}`);
     }
 
-    const packNames = this.parsePackNames();
-    if (packNames.length === 0) {
-      throw new Error(`no pack names given (use --packs=<name,...>)`);
+    const interactive = this._packs === undefined;
+    if (interactive && !canPrompt()) {
+      throw new Error(
+        `The --packs option is required (or run remove-pack in an interactive terminal). e.g. --packs=git-workflow`,
+      );
     }
 
     const existingPacks = new Map<string, PackSelection>(
       Object.entries(config.packs[this._source] ?? {}),
     );
+
+    const packNames = interactive
+      ? await this.promptPackSelection(existingPacks)
+      : this.parsePackNames();
+
+    if (!interactive && packNames.length === 0) {
+      throw new Error(`no pack names given (use --packs=<name,...>)`);
+    }
 
     const removedPacks: RemovedPack[] = [];
     const skippedPackNames: string[] = [];
@@ -87,8 +100,36 @@ export class RemovePackCommand {
     };
   }
 
+  private async promptPackSelection(existingPacks: Map<string, PackSelection>): Promise<string[]> {
+    if (existingPacks.size === 0) {
+      return [];
+    }
+
+    const rows = alignPackRows(
+      [...existingPacks.entries()].map(([name, pack]) => ({
+        name,
+        counts: {
+          skills: pack.skills.length,
+          agents: pack.agents.length,
+          guidelines: Object.keys(pack.guidelines).length,
+        },
+      })),
+    );
+
+    const choices = rows.map((row) => ({
+      name: `${row.paddedName}  ${row.counts}`,
+      value: row.name,
+      short: row.name,
+    }));
+
+    return checkbox({
+      message: `Select packs to remove from '${this._source}'`,
+      choices,
+    });
+  }
+
   private parsePackNames() {
-    const packs = this._packs
+    const packs = (this._packs ?? '')
       .split(',')
       .map((pack) => pack.trim())
       .filter((pack) => pack.length > 0);

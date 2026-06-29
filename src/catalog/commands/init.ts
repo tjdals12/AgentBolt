@@ -15,6 +15,7 @@ import { normalizeConfig } from '#catalog/config/normalize.js';
 import { type ToolId } from '#catalog/tool/model.js';
 import { isToolId, listTools } from '#catalog/tool/catalog.js';
 import { showWelcomeScreen } from '#core/intro/index.js';
+import { canPrompt } from '#core/tty.js';
 
 export type InitResult = {
   configPath: string;
@@ -70,17 +71,12 @@ export class InitCommand {
 
   private resolveInteractive(): boolean {
     const wantsInteractive = this._tools === undefined;
-    if (wantsInteractive && !this.canPrompt()) {
+    if (wantsInteractive && !canPrompt()) {
       throw new Error(
         'The --tools option is required (or run init in an interactive terminal). e.g. --tools=codex,claude',
       );
     }
     return wantsInteractive;
-  }
-
-  private canPrompt(): boolean {
-    if ('CI' in process.env) return false;
-    return process.stdin.isTTY === true;
   }
 
   private assertCanCreateConfig(configPath: string): void {

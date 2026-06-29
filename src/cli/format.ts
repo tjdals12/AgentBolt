@@ -47,6 +47,13 @@ function displayWidth(text: string): number {
   return width;
 }
 
+// eslint-disable-next-line no-control-regex
+const ANSI_PATTERN = /\x1b\[[0-9;]*m/g;
+
+export function visibleWidth(text: string): number {
+  return displayWidth(text.replace(ANSI_PATTERN, ''));
+}
+
 export function contentWidth(indent: number): number {
   return Math.max(Math.min(process.stdout.columns ?? 80, MAX_CONTENT_WIDTH) - indent, 20);
 }
@@ -66,4 +73,31 @@ export function wrapText(text: string, width: number): string[] {
   }
   if (current) lines.push(current);
   return lines;
+}
+
+export type PackCounts = { skills: number; agents: number; guidelines: number };
+
+export type AlignedPackRow = { name: string; paddedName: string; counts: string };
+
+export function alignPackRows(rows: { name: string; counts: PackCounts }[]): AlignedPackRow[] {
+  const itemTypes = ['skills', 'agents', 'guidelines'] as const;
+  const nameWidth = Math.max(0, ...rows.map((row) => row.name.length));
+  const columnWidths = { skills: 0, agents: 0, guidelines: 0 };
+  for (const row of rows) {
+    for (const itemType of itemTypes) {
+      const token = countToken(ITEM_STYLE[itemType], row.counts[itemType]);
+      columnWidths[itemType] = Math.max(columnWidths[itemType], visibleWidth(token));
+    }
+  }
+
+  return rows.map((row) => {
+    const counts = itemTypes
+      .map((itemType) => {
+        const token = countToken(ITEM_STYLE[itemType], row.counts[itemType]);
+        const padding = ' '.repeat(columnWidths[itemType] - visibleWidth(token));
+        return `${token}${padding}`;
+      })
+      .join('  ');
+    return { name: row.name, paddedName: row.name.padEnd(nameWidth), counts };
+  });
 }
