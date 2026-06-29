@@ -157,21 +157,23 @@ program
   .command('add-pack')
   .description('Add whole packs from a source to the config (all items included)')
   .requiredOption('--source <alias>', 'Target source to add the packs to (required)')
-  .requiredOption('--packs <list>', 'Pack names to add (comma separated) (required)')
+  .option('--packs <list>', 'Pack names to add (comma separated). Omit to pick interactively')
   .addHelpText(
     'after',
     dedent`
     Examples:
+      $ agent-bolt add-pack --source=common  # pick packs interactively
       $ agent-bolt add-pack --source=common --packs=git-workflow
       $ agent-bolt add-pack --source=common --packs=git-workflow,code-review
     `,
   )
-  .action(async (options: { source: string; packs: string }) => {
+  .action(async (options: { source: string; packs?: string }) => {
     const projectPath = process.cwd();
     try {
       const { AddPackCommand } = await import('#catalog/commands/add-pack.js');
+      const reporter = ProgressReporter.create();
       const command = new AddPackCommand(options);
-      const result = command.execute(projectPath);
+      const result = await command.execute(projectPath, reporter);
       renderAddPackResult(result);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
@@ -184,21 +186,22 @@ program
   .command('remove-pack')
   .description('Remove whole packs from a source in the config')
   .requiredOption('--source <alias>', 'Target source to remove the packs from (required)')
-  .requiredOption('--packs <list>', 'Pack names to remove (comma separated) (required)')
+  .option('--packs <list>', 'Pack names to remove (comma separated). Omit to pick interactively')
   .addHelpText(
     'after',
     dedent`
     Examples:
+      $ agent-bolt remove-pack --source=common  # pick packs interactively
       $ agent-bolt remove-pack --source=common --packs=git-workflow
       $ agent-bolt remove-pack --source=common --packs=git-workflow,code-review
     `,
   )
-  .action(async (options: { source: string; packs: string }) => {
+  .action(async (options: { source: string; packs?: string }) => {
     const projectPath = process.cwd();
     try {
       const { RemovePackCommand } = await import('#catalog/commands/remove-pack.js');
       const command = new RemovePackCommand(options);
-      const result = command.execute(projectPath);
+      const result = await command.execute(projectPath);
       renderRemovePackResult(result);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import type { RemovePackResult } from '#catalog/commands/remove-pack.js';
-import { countToken, ITEM_STYLE } from '#cli/format.js';
+import { alignPackRows } from '#cli/format.js';
 
 import { printSyncHint } from './shared/sync-hint.js';
 import { Banner } from './shared/banner.js';
@@ -18,24 +18,20 @@ export function renderRemovePackResult(result: RemovePackResult): void {
     return;
   }
 
+  const rows = alignPackRows(
+    removedPacks.map((pack) => ({
+      name: pack.name,
+      counts: {
+        skills: pack.skills.length,
+        agents: pack.agents.length,
+        guidelines: pack.guidelines.length,
+      },
+    })),
+  );
+
   console.log('');
-  for (const removedPack of removedPacks) {
-    const { name, skills, agents, guidelines } = removedPack;
-
-    const parts: string[] = [];
-    if (skills.length > 0) {
-      parts.push(countToken(ITEM_STYLE.skills, skills.length));
-    }
-    if (agents.length > 0) {
-      parts.push(countToken(ITEM_STYLE.agents, agents.length));
-    }
-    if (guidelines.length > 0) {
-      parts.push(countToken(ITEM_STYLE.guidelines, guidelines.length));
-    }
-
-    console.log(
-      `${chalk.red('-')} 📂 ${chalk.bold(name)}${parts.length ? `   ${parts.join('  ')}` : ''}`,
-    );
+  for (const row of rows) {
+    console.log(`${chalk.red('-')} 📂 ${chalk.bold(row.paddedName)}  ${row.counts}`);
   }
 
   for (const skippedPackName of skippedPackNames) {

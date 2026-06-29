@@ -1,9 +1,16 @@
+import { checkbox } from '@inquirer/prompts';
+
 import { loadConfig } from '#catalog/config/load.js';
 import { parseCatalogDetail } from '#catalog/content/parse.js';
 import { resolveCatalogDir } from '#catalog/source/resolve.js';
 import { buildCatalogConfigPath } from '#core/paths.js';
+import { canPrompt } from '#core/tty.js';
 import { editConfigFile } from '#catalog/config/write.js';
+import { alignPackRows } from '#cli/format.js';
 import type { GuidelineSelection } from '#catalog/config/schema.js';
+import type { Source } from '#catalog/source/schema.js';
+import type { PackDetail } from '#catalog/content/pack/model.js';
+import type { ProgressReporter } from '#core/progress.js';
 
 export type AddedPack = {
   name: string;
@@ -20,14 +27,14 @@ export type AddPackResult = {
 
 export class AddPackCommand {
   private readonly _source: string;
-  private readonly _packs: string;
+  private readonly _packs?: string;
 
-  constructor(options: { source: string; packs: string }) {
+  constructor(options: { source: string; packs?: string }) {
     this._source = options.source;
     this._packs = options.packs;
   }
 
-  execute(projectPath: string): AddPackResult {
+  async execute(projectPath: string, reporter: ProgressReporter): Promise<AddPackResult> {
     const configPath = buildCatalogConfigPath(projectPath);
     const config = loadConfig(configPath);
 
@@ -36,17 +43,26 @@ export class AddPackCommand {
       throw new Error(`source '${this._source}' not found in ${configPath}`);
     }
 
-    const packNames = this.parsePackNames();
-    if (packNames.length === 0) {
-      throw new Error(`no pack names given (use --packs=<name,...>)`);
+    const interactive = this._packs === undefined;
+    if (interactive && !canPrompt()) {
+      throw new Error(
+        `The --packs option is required (or run add-pack in an interactive terminal). e.g. --packs=git-workflow`,
+      );
     }
 
-    const catalogDir = resolveCatalogDir(projectPath, this._source, source);
-    const catalogDetail = parseCatalogDetail(catalogDir);
+    const catalogDetail = this.resolveCatalogDetail(projectPath, source, reporter, interactive);
     const availablePacks = new Map(
       catalogDetail.map((packDetail) => [packDetail.name, packDetail]),
     );
     const existingPacks = new Set(Object.keys(config.packs[this._source] ?? {}));
+
+    const packNames = interactive
+      ? await this.promptPackSelection(catalogDetail, existingPacks)
+      : this.parsePackNames();
+
+    if (!interactive && packNames.length === 0) {
+      throw new Error(`no pack names given (use --packs=<name,...>)`);
+    }
 
     const addedPackNames: string[] = [];
     const skippedPackNames: string[] = [];
@@ -109,8 +125,69 @@ export class AddPackCommand {
     };
   }
 
+  private resolveCatalogDetail(
+    projectPath: string,
+    source: Source,
+    reporter: ProgressReporter,
+    interactive: boolean,
+  ): PackDetail[] {
+    if (!interactive) {
+      const catalogDir = resolveCatalogDir(projectPath, this._source, source);
+      return parseCatalogDetail(catalogDir);
+    }
+
+    reporter.start(`Resolving source '${this._source}'`);
+    try {
+      const catalogDir = resolveCatalogDir(projectPath, this._source, source);
+      const catalogDetail = parseCatalogDetail(catalogDir);
+      reporter.succeed(`source '${this._source}'`);
+      return catalogDetail;
+    } catch (e) {
+      reporter.stop();
+      throw e;
+    }
+  }
+
+  private async promptPackSelection(
+    catalogDetail: PackDetail[],
+    existingPacks: Set<string>,
+  ): Promise<string[]> {
+    if (catalogDetail.length === 0) {
+      throw new Error(`source '${this._source}' has no packs to add.`);
+    }
+
+    const hasSelectablePack = catalogDetail.some((pack) => !existingPacks.has(pack.name));
+    if (!hasSelectablePack) {
+      return [];
+    }
+
+    const rows = alignPackRows(
+      catalogDetail.map((pack) => ({
+        name: pack.name,
+        counts: {
+          skills: pack.items.skills.length,
+          agents: pack.items.agents.length,
+          guidelines: pack.items.guidelines.length,
+        },
+      })),
+    );
+
+    const choices = rows.map((row) => ({
+      name: `${row.paddedName}  ${row.counts}`,
+      value: row.name,
+      short: row.name,
+      disabled: existingPacks.has(row.name) ? '(already added)' : false,
+    }));
+
+    return checkbox({
+      message: `Select packs to add to '${this._source}'`,
+      choices,
+      theme: { icon: { disabledUnchecked: '✓' } },
+    });
+  }
+
   private parsePackNames() {
-    const packs = this._packs
+    const packs = (this._packs ?? '')
       .split(',')
       .map((pack) => pack.trim())
       .filter((pack) => pack.length > 0);
