@@ -192,6 +192,8 @@ $ agent-bolt add-pack --source=common --packs=common
 ...
 ```
 
+Omit `--packs` to pick packages from a checklist instead of typing their names. Omit `--source` too and `add-pack` goes fully interactive: choose a catalog, pick its packages, then keep going with another catalog until you're done. `remove-pack` works the same way for dropping packages.
+
 Use `add-item` to add just specific items from a package.
 
 ```text
@@ -546,13 +548,15 @@ agent-bolt show-item --source <alias> --pack <name> --item <name> [options]
 Adds an entire package to your config.
 
 ```text
-agent-bolt add-pack --source <alias> --packs <list>
+agent-bolt add-pack [--source <alias>] [--packs <list>]
 ```
 
-| Option             | Description                               | Required | Default |
-| ------------------ | ----------------------------------------- | -------- | ------- |
-| `--source <alias>` | Target catalog                            | Required | —       |
-| `--packs <list>`   | Names of packages to add. Comma-separated | Required | —       |
+| Option             | Description                               | Required | Default            |
+| ------------------ | ----------------------------------------- | -------- | ------------------ |
+| `--source <alias>` | Target catalog                            | Optional | Interactive prompt |
+| `--packs <list>`   | Names of packages to add. Comma-separated | Optional | Interactive prompt |
+
+Omitting `--packs` picks packages interactively; omitting `--source` as well picks the catalog first and then loops over sources. `--packs` requires `--source`.
 
 ### `agent-bolt add-item`
 
@@ -575,13 +579,15 @@ agent-bolt add-item --source <alias> --pack <name> [options]
 Removes an entire package from your config.
 
 ```text
-agent-bolt remove-pack --source <alias> --packs <list>
+agent-bolt remove-pack [--source <alias>] [--packs <list>]
 ```
 
-| Option             | Description                                  | Required | Default |
-| ------------------ | -------------------------------------------- | -------- | ------- |
-| `--source <alias>` | Target catalog                               | Required | —       |
-| `--packs <list>`   | Names of packages to remove. Comma-separated | Required | —       |
+| Option             | Description                                  | Required | Default            |
+| ------------------ | -------------------------------------------- | -------- | ------------------ |
+| `--source <alias>` | Target catalog                               | Optional | Interactive prompt |
+| `--packs <list>`   | Names of packages to remove. Comma-separated | Optional | Interactive prompt |
+
+Omitting `--packs` picks packages interactively; omitting `--source` as well picks the catalog first and then loops over sources. `--packs` requires `--source`.
 
 ### `agent-bolt remove-item`
 
