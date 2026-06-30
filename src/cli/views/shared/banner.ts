@@ -32,11 +32,21 @@ export const Banner = {
     printBanner(chalk.green, text);
   },
 
+  addPacks(count: number): void {
+    const text = count === 0 ? 'Nothing to add' : `Added ${count} ${plural(count, 'pack')}`;
+    printBanner(chalk.green, text);
+  },
+
   removePack(count: number, alias: string): void {
     const text =
       count === 0
         ? `Nothing to remove from ${alias}`
         : `Removed ${count} ${plural(count, 'pack')} from ${alias}`;
+    printBanner(chalk.red, text);
+  },
+
+  removePacks(count: number): void {
+    const text = count === 0 ? 'Nothing to remove' : `Removed ${count} ${plural(count, 'pack')}`;
     printBanner(chalk.red, text);
   },
 

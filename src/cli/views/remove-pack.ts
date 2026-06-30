@@ -1,25 +1,14 @@
 import chalk from 'chalk';
 
-import type { RemovePackResult } from '#catalog/commands/remove-pack.js';
+import type { RemovePackResult, RemovedPack } from '#catalog/commands/remove-pack.js';
 import { alignPackRows } from '#cli/format.js';
 
 import { printSyncHint } from './shared/sync-hint.js';
 import { Banner } from './shared/banner.js';
 
-export function renderRemovePackResult(result: RemovePackResult): void {
-  const { sourceAlias, removedPacks, skippedPackNames } = result;
-
-  Banner.removePack(removedPacks.length, sourceAlias);
-
-  if (removedPacks.length === 0) {
-    for (const name of skippedPackNames) {
-      console.log(`  ${chalk.dim(`📂 ${name} — not in ${sourceAlias}`)}`);
-    }
-    return;
-  }
-
+function printRemovedPacks(packs: RemovedPack[], indent: string): void {
   const rows = alignPackRows(
-    removedPacks.map((pack) => ({
+    packs.map((pack) => ({
       name: pack.name,
       counts: {
         skills: pack.skills.length,
@@ -28,15 +17,40 @@ export function renderRemovePackResult(result: RemovePackResult): void {
       },
     })),
   );
-
-  console.log('');
   for (const row of rows) {
-    console.log(`${chalk.red('-')} 📂 ${chalk.bold(row.paddedName)}  ${row.counts}`);
+    console.log(`${indent}${chalk.red('-')} 📂 ${chalk.bold(row.paddedName)}  ${row.counts}`);
+  }
+}
+
+export function renderRemovePackResult(results: RemovePackResult): void {
+  const totalRemoved = results.reduce((sum, source) => sum + source.removedPacks.length, 0);
+  const multi = results.length > 1;
+
+  if (results.length === 1) {
+    const only = results[0]!;
+    Banner.removePack(only.removedPacks.length, only.sourceAlias);
+  } else {
+    Banner.removePacks(totalRemoved);
   }
 
-  for (const skippedPackName of skippedPackNames) {
-    console.log(`  ${chalk.dim(`📂 ${skippedPackName} — not in ${sourceAlias}`)}`);
+  for (const source of results) {
+    const { sourceAlias, removedPacks, skippedPackNames } = source;
+
+    if (multi) {
+      console.log('');
+      console.log(`▸ ${chalk.bold(sourceAlias)}`);
+      printRemovedPacks(removedPacks, '  ');
+    } else if (removedPacks.length > 0) {
+      console.log('');
+      printRemovedPacks(removedPacks, '');
+    }
+
+    for (const skipped of skippedPackNames) {
+      console.log(`  ${chalk.dim(`📂 ${skipped} — not in ${sourceAlias}`)}`);
+    }
   }
 
-  printSyncHint();
+  if (totalRemoved > 0) {
+    printSyncHint();
+  }
 }
