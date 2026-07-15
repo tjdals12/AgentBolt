@@ -192,6 +192,8 @@ $ agent-bolt add-pack --source=common --packs=common
 ...
 ```
 
+`--packs`를 빼면 이름을 입력하는 대신 패키지를 목록에서 골라 추가합니다. `--source`까지 빼면 완전 대화형으로 동작해, 카탈로그를 고르고 그 패키지를 선택한 뒤 다른 카탈로그로 옮겨 가며 계속 추가할 수 있습니다. `remove-pack`도 같은 방식으로 패키지를 삭제합니다.
+
 `add-item`으로 패키지에서 특정 아이템만 추가합니다.
 
 ```text
@@ -546,13 +548,15 @@ agent-bolt show-item --source <alias> --pack <name> --item <name> [options]
 패키지 전체를 설정에 추가합니다.
 
 ```text
-agent-bolt add-pack --source <alias> --packs <list>
+agent-bolt add-pack [--source <alias>] [--packs <list>]
 ```
 
-| 옵션               | 설명                            | 필수/선택 | 기본값 |
-| ------------------ | ------------------------------- | --------- | ------ |
-| `--source <alias>` | 대상 카탈로그                   | 필수      | —      |
-| `--packs <list>`   | 추가할 패키지 이름. 콤마로 구분 | 필수      | —      |
+| 옵션               | 설명                            | 필수/선택 | 기본값      |
+| ------------------ | ------------------------------- | --------- | ----------- |
+| `--source <alias>` | 대상 카탈로그                   | 선택      | 대화형 선택 |
+| `--packs <list>`   | 추가할 패키지 이름. 콤마로 구분 | 선택      | 대화형 선택 |
+
+`--packs`를 생략하면 패키지를 대화형으로 고르고, `--source`까지 생략하면 카탈로그를 먼저 고른 뒤 여러 source를 오가며 반복합니다. `--packs`는 `--source`와 함께 써야 합니다.
 
 ### `agent-bolt add-item`
 
@@ -575,13 +579,15 @@ agent-bolt add-item --source <alias> --pack <name> [options]
 설정에서 패키지 전체를 제거합니다.
 
 ```text
-agent-bolt remove-pack --source <alias> --packs <list>
+agent-bolt remove-pack [--source <alias>] [--packs <list>]
 ```
 
-| 옵션               | 설명                            | 필수/선택 | 기본값 |
-| ------------------ | ------------------------------- | --------- | ------ |
-| `--source <alias>` | 대상 카탈로그                   | 필수      | —      |
-| `--packs <list>`   | 제거할 패키지 이름. 콤마로 구분 | 필수      | —      |
+| 옵션               | 설명                            | 필수/선택 | 기본값      |
+| ------------------ | ------------------------------- | --------- | ----------- |
+| `--source <alias>` | 대상 카탈로그                   | 선택      | 대화형 선택 |
+| `--packs <list>`   | 제거할 패키지 이름. 콤마로 구분 | 선택      | 대화형 선택 |
+
+`--packs`를 생략하면 패키지를 대화형으로 고르고, `--source`까지 생략하면 카탈로그를 먼저 고른 뒤 여러 source를 오가며 반복합니다. `--packs`는 `--source`와 함께 써야 합니다.
 
 ### `agent-bolt remove-item`
 

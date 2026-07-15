@@ -1,46 +1,56 @@
 import chalk from 'chalk';
 
-import type { RemovePackResult } from '#catalog/commands/remove-pack.js';
-import { countToken, ITEM_STYLE } from '#cli/format.js';
+import type { RemovePackResult, RemovedPack } from '#catalog/commands/remove-pack.js';
+import { alignPackRows } from '#cli/format.js';
 
 import { printSyncHint } from './shared/sync-hint.js';
 import { Banner } from './shared/banner.js';
 
-export function renderRemovePackResult(result: RemovePackResult): void {
-  const { sourceAlias, removedPacks, skippedPackNames } = result;
+function printRemovedPacks(packs: RemovedPack[], indent: string): void {
+  const rows = alignPackRows(
+    packs.map((pack) => ({
+      name: pack.name,
+      counts: {
+        skills: pack.skills.length,
+        agents: pack.agents.length,
+        guidelines: pack.guidelines.length,
+      },
+    })),
+  );
+  for (const row of rows) {
+    console.log(`${indent}${chalk.red('-')} 📂 ${chalk.bold(row.paddedName)}  ${row.counts}`);
+  }
+}
 
-  Banner.removePack(removedPacks.length, sourceAlias);
+export function renderRemovePackResult(results: RemovePackResult): void {
+  const totalRemoved = results.reduce((sum, source) => sum + source.removedPacks.length, 0);
+  const multi = results.length > 1;
 
-  if (removedPacks.length === 0) {
-    for (const name of skippedPackNames) {
-      console.log(`  ${chalk.dim(`📂 ${name} — not in ${sourceAlias}`)}`);
-    }
-    return;
+  if (results.length === 1) {
+    const only = results[0]!;
+    Banner.removePack(only.removedPacks.length, only.sourceAlias);
+  } else {
+    Banner.removePacks(totalRemoved);
   }
 
-  console.log('');
-  for (const removedPack of removedPacks) {
-    const { name, skills, agents, guidelines } = removedPack;
+  for (const source of results) {
+    const { sourceAlias, removedPacks, skippedPackNames } = source;
 
-    const parts: string[] = [];
-    if (skills.length > 0) {
-      parts.push(countToken(ITEM_STYLE.skills, skills.length));
-    }
-    if (agents.length > 0) {
-      parts.push(countToken(ITEM_STYLE.agents, agents.length));
-    }
-    if (guidelines.length > 0) {
-      parts.push(countToken(ITEM_STYLE.guidelines, guidelines.length));
+    if (multi) {
+      console.log('');
+      console.log(`▸ ${chalk.bold(sourceAlias)}`);
+      printRemovedPacks(removedPacks, '  ');
+    } else if (removedPacks.length > 0) {
+      console.log('');
+      printRemovedPacks(removedPacks, '');
     }
 
-    console.log(
-      `${chalk.red('-')} 📂 ${chalk.bold(name)}${parts.length ? `   ${parts.join('  ')}` : ''}`,
-    );
+    for (const skipped of skippedPackNames) {
+      console.log(`  ${chalk.dim(`📂 ${skipped} — not in ${sourceAlias}`)}`);
+    }
   }
 
-  for (const skippedPackName of skippedPackNames) {
-    console.log(`  ${chalk.dim(`📂 ${skippedPackName} — not in ${sourceAlias}`)}`);
+  if (totalRemoved > 0) {
+    printSyncHint();
   }
-
-  printSyncHint();
 }
