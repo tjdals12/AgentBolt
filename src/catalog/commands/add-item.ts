@@ -212,7 +212,8 @@ export class AddItemCommand {
       const existingPacks: Record<string, PackSelection> = freshConfig.packs[sourceAlias] ?? {};
 
       const hasSelectablePack = catalogDetail.some((pack) => {
-        const { added, total } = this.countConfiguredItems(pack, existingPacks[pack.name]);
+        const configuredPack = existingPacks[pack.name];
+        const { added, total } = this.countConfiguredItems(pack, configuredPack);
         return added < total;
       });
       if (!hasSelectablePack) {
@@ -222,14 +223,14 @@ export class AddItemCommand {
         break;
       }
 
-      const nextPackName = await this.promptPackSelection(
+      const selectedPackName = await this.promptPackSelection(
         catalogDetail,
         sourceAlias,
         existingPacks,
       );
-      if (nextPackName === null) break;
+      if (selectedPackName === null) break;
 
-      const packDetail = catalogDetail.find((pack) => pack.name === nextPackName)!;
+      const packDetail = catalogDetail.find((pack) => pack.name === selectedPackName)!;
       const pack = await this.addItemsToPack({
         configPath,
         config: freshConfig,
@@ -439,7 +440,7 @@ export class AddItemCommand {
     packDetail: PackDetail,
     existingPack: PackSelection | undefined,
   ): { added: number; total: number } {
-    const existing: Record<ItemType, Set<string>> = {
+    const existingItemsByType: Record<ItemType, Set<string>> = {
       skills: new Set(existingPack?.skills ?? []),
       agents: new Set(existingPack?.agents ?? []),
       guidelines: new Set(Object.keys(existingPack?.guidelines ?? {})),
@@ -447,9 +448,11 @@ export class AddItemCommand {
     let added = 0;
     let total = 0;
     for (const itemType of ITEM_TYPES) {
-      for (const item of packDetail.items[itemType]) {
+      const catalogItems = packDetail.items[itemType];
+      const configuredItemNames = existingItemsByType[itemType];
+      for (const item of catalogItems) {
         total += 1;
-        if (existing[itemType].has(item.name)) added += 1;
+        if (configuredItemNames.has(item.name)) added += 1;
       }
     }
     return { added, total };
