@@ -5,7 +5,7 @@ import { buildCatalogConfigPath } from '#core/paths.js';
 import { canPrompt } from '#core/tty.js';
 import { loadConfig } from '#catalog/config/load.js';
 import { editConfigFile } from '#catalog/config/write.js';
-import type { Config, GuidelineSelection } from '#catalog/config/schema.js';
+import type { Config, GuidelineSelection, PackSelection } from '#catalog/config/schema.js';
 import { resolveCatalogDir } from '#catalog/source/resolve.js';
 import { ITEM_TYPES, type ItemType } from '#catalog/content/item/model.js';
 import { parseCatalogDetail } from '#catalog/content/parse.js';
@@ -208,17 +208,29 @@ export class AddItemCommand {
 
     const packs: AddedItemPack[] = [];
     while (true) {
-      const addedByPack = new Map<string, number>();
-      for (const addedPack of packs) {
-        const prev = addedByPack.get(addedPack.packName) ?? 0;
-        addedByPack.set(addedPack.packName, prev + this.countAddedItems(addedPack));
+      const freshConfig = loadConfig(configPath);
+      const existingPacks: Record<string, PackSelection> = freshConfig.packs[sourceAlias] ?? {};
+
+      const hasSelectablePack = catalogDetail.some((pack) => {
+        const configuredPack = existingPacks[pack.name];
+        const { added, total } = this.countConfiguredItems(pack, configuredPack);
+        return added < total;
+      });
+      if (!hasSelectablePack) {
+        if (packs.length === 0) {
+          console.log(chalk.dim(`  all items in source '${sourceAlias}' are already added`));
+        }
+        break;
       }
 
-      const nextPackName = await this.promptPackSelection(catalogDetail, sourceAlias, addedByPack);
-      if (nextPackName === null) break;
+      const selectedPackName = await this.promptPackSelection(
+        catalogDetail,
+        sourceAlias,
+        existingPacks,
+      );
+      if (selectedPackName === null) break;
 
-      const packDetail = catalogDetail.find((pack) => pack.name === nextPackName)!;
-      const freshConfig = loadConfig(configPath);
+      const packDetail = catalogDetail.find((pack) => pack.name === selectedPackName)!;
       const pack = await this.addItemsToPack({
         configPath,
         config: freshConfig,
@@ -424,10 +436,32 @@ export class AddItemCommand {
     });
   }
 
+  private countConfiguredItems(
+    packDetail: PackDetail,
+    existingPack: PackSelection | undefined,
+  ): { added: number; total: number } {
+    const existingItemsByType: Record<ItemType, Set<string>> = {
+      skills: new Set(existingPack?.skills ?? []),
+      agents: new Set(existingPack?.agents ?? []),
+      guidelines: new Set(Object.keys(existingPack?.guidelines ?? {})),
+    };
+    let added = 0;
+    let total = 0;
+    for (const itemType of ITEM_TYPES) {
+      const catalogItems = packDetail.items[itemType];
+      const configuredItemNames = existingItemsByType[itemType];
+      for (const item of catalogItems) {
+        total += 1;
+        if (configuredItemNames.has(item.name)) added += 1;
+      }
+    }
+    return { added, total };
+  }
+
   private async promptPackSelection(
     catalogDetail: PackDetail[],
     sourceAlias: string,
-    addedByPack: Map<string, number>,
+    existingPacks: Record<string, PackSelection>,
   ): Promise<string | null> {
     const rows = alignPackRows(
       catalogDetail.map((pack) => ({
@@ -441,12 +475,24 @@ export class AddItemCommand {
     );
 
     const packChoices = rows.map((row) => {
-      const added = addedByPack.get(row.name) ?? 0;
-      const addedNote = added > 0 ? chalk.dim(`  · added ${added}`) : '';
+      const packDetail = catalogDetail.find((pack) => pack.name === row.name)!;
+      const { added, total } = this.countConfiguredItems(packDetail, existingPacks[row.name]);
+
+      let disabled: string | false = false;
+      let addedNote = '';
+      if (total === 0) {
+        disabled = '(no items)';
+      } else if (added >= total) {
+        disabled = `(${added}/${total} added)`;
+      } else if (added > 0) {
+        addedNote = chalk.dim(`  (${added}/${total} added)`);
+      }
+
       return {
         name: `${row.paddedName}  ${row.counts}${addedNote}`,
         value: row.name,
         short: row.name,
+        disabled,
       };
     });
 
