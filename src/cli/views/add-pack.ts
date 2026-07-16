@@ -47,7 +47,7 @@ export function renderAddPackResult(result: AddPackResult): void {
     }
 
     for (const skipped of skippedPackNames) {
-      console.log(`  ${chalk.dim(`📂 ${skipped} — already in ${sourceAlias}`)}`);
+      console.log(`  ${chalk.dim(`📂 ${skipped} — already in source '${sourceAlias}'`)}`);
     }
   }
 

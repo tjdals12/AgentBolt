@@ -46,7 +46,7 @@ export function renderRemovePackResult(results: RemovePackResult): void {
     }
 
     for (const skipped of skippedPackNames) {
-      console.log(`  ${chalk.dim(`📂 ${skipped} — not in ${sourceAlias}`)}`);
+      console.log(`  ${chalk.dim(`📂 ${skipped} — not in source '${sourceAlias}'`)}`);
     }
   }
 
