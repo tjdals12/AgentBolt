@@ -75,6 +75,26 @@ export function wrapText(text: string, width: number): string[] {
   return lines;
 }
 
+export function truncate(text: string, maxWidth: number): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (displayWidth(clean) <= maxWidth) return clean;
+
+  let width = 0;
+  let result = '';
+  for (const ch of clean) {
+    const w = charWidth(ch.codePointAt(0) ?? 0);
+    if (width + w > maxWidth - 1) break;
+    width += w;
+    result += ch;
+  }
+  return `${result}…`;
+}
+
+export function pageSizeFor(choiceCount: number): number {
+  const viewportRows = process.stdout.rows ?? 24;
+  return Math.min(choiceCount, Math.max(3, viewportRows - 4));
+}
+
 export type PackCounts = { skills: number; agents: number; guidelines: number };
 
 export type AlignedPackRow = { name: string; paddedName: string; counts: string };
