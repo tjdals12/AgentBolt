@@ -215,8 +215,8 @@ program
 program
   .command('add-item')
   .description('Add items to a source/pack in the config (creates the pack section if missing)')
-  .requiredOption('--source <alias>', 'Target source to add the items to (required)')
-  .requiredOption('--pack <name>', 'Target pack to add the items to (required)')
+  .option('--source <alias>', 'Target source to add the items to. Omit to pick interactively')
+  .option('--pack <name>', 'Target pack to add the items to. Omit to pick interactively')
   .option('--skills <list>', 'Skill names to add (comma separated)')
   .option('--agents <list>', 'Agent names to add (comma separated)')
   .option('--guidelines <list>', 'Guideline names to add (comma separated)')
@@ -224,14 +224,17 @@ program
     'after',
     dedent`
     Examples:
+      $ agent-bolt add-item  # pick a source, then packs and items, interactively
+      $ agent-bolt add-item --source=common  # pick packs, then items, interactively
+      $ agent-bolt add-item --source=common --pack=git-workflow  # pick items interactively
       $ agent-bolt add-item --source=common --pack=git-workflow --skills=create-commit,clean-code
       $ agent-bolt add-item --source=common --pack=git-workflow --skills=create-commit --agents=code-reviewer
     `,
   )
   .action(
     async (options: {
-      source: string;
-      pack: string;
+      source?: string;
+      pack?: string;
       skills?: string;
       agents?: string;
       guidelines?: string;
@@ -239,8 +242,9 @@ program
       const projectPath = process.cwd();
       try {
         const { AddItemCommand } = await import('#catalog/commands/add-item.js');
+        const reporter = ProgressReporter.create();
         const command = new AddItemCommand(options);
-        const result = command.execute(projectPath);
+        const result = await command.execute(projectPath, reporter);
         renderAddItemResult(result);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);

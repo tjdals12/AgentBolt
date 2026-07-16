@@ -1,29 +1,47 @@
+import { checkbox, select, Separator } from '@inquirer/prompts';
+import chalk from 'chalk';
+
 import { buildCatalogConfigPath } from '#core/paths.js';
+import { canPrompt } from '#core/tty.js';
 import { loadConfig } from '#catalog/config/load.js';
 import { editConfigFile } from '#catalog/config/write.js';
-import type { GuidelineSelection } from '#catalog/config/schema.js';
+import type { Config, GuidelineSelection } from '#catalog/config/schema.js';
 import { resolveCatalogDir } from '#catalog/source/resolve.js';
 import { ITEM_TYPES, type ItemType } from '#catalog/content/item/model.js';
 import { parseCatalogDetail } from '#catalog/content/parse.js';
+import { alignPackRows, pageSizeFor, truncate, visibleWidth } from '#cli/format.js';
+import { itemSectionHeader } from '#cli/prompts.js';
+import type { Source } from '#catalog/source/schema.js';
+import type { PackDetail } from '#catalog/content/pack/model.js';
+import type { ProgressReporter } from '#core/progress.js';
 
-export type AddItemResult = {
-  sourceAlias: string;
+export type AddedItemPack = {
   packName: string;
   packCreated: boolean;
   addedItems: Record<ItemType, string[]>;
   skippedItems: Record<ItemType, string[]>;
 };
 
+export type AddedItemSourceResult = {
+  sourceAlias: string;
+  packs: AddedItemPack[];
+};
+
+export type AddItemResult = {
+  results: AddedItemSourceResult[];
+  failures: string[];
+};
+
 export class AddItemCommand {
-  private readonly _source: string;
-  private readonly _pack: string;
+  private readonly _source?: string;
+  private readonly _pack?: string;
   private readonly _skills?: string;
   private readonly _agents?: string;
   private readonly _guidelines?: string;
 
   constructor(options: {
-    source: string;
-    pack: string;
+    source?: string;
+    pack?: string;
     skills?: string;
     agents?: string;
     guidelines?: string;
@@ -35,37 +53,211 @@ export class AddItemCommand {
     this._guidelines = options.guidelines;
   }
 
-  execute(projectPath: string): AddItemResult {
+  async execute(projectPath: string, reporter: ProgressReporter): Promise<AddItemResult> {
+    if (this._source !== undefined) {
+      const promptPack = this._pack === undefined;
+      const promptItems =
+        this._skills === undefined && this._agents === undefined && this._guidelines === undefined;
+
+      if (promptPack && !promptItems) {
+        throw new Error(
+          'The --pack option is required with --skills, --agents, or --guidelines. e.g. --pack=git-workflow',
+        );
+      }
+      if ((promptPack || promptItems) && !canPrompt()) {
+        if (promptPack) {
+          throw new Error(
+            'The --pack option is required (or run add-item in an interactive terminal). e.g. --pack=git-workflow',
+          );
+        }
+        throw new Error(
+          'No items to add. Specify at least one of --skills, --agents, or --guidelines (or run add-item in an interactive terminal).',
+        );
+      }
+
+      const optionItemsByType = promptItems
+        ? undefined
+        : {
+            skills: this.parseItemNames(this._skills),
+            agents: this.parseItemNames(this._agents),
+            guidelines: this.parseItemNames(this._guidelines),
+          };
+      if (optionItemsByType) {
+        const totalInput = ITEM_TYPES.reduce(
+          (sum, type) => sum + optionItemsByType[type].length,
+          0,
+        );
+        if (totalInput === 0) {
+          throw new Error(
+            'No items to add. Specify at least one of --skills, --agents, or --guidelines.',
+          );
+        }
+      }
+
+      const result = await this.addItemsFromSource({
+        projectPath,
+        sourceAlias: this._source,
+        packName: this._pack,
+        optionItemsByType,
+        reporter,
+      });
+      return { results: [result], failures: [] };
+    }
+
+    if (this._pack !== undefined) {
+      throw new Error('The --source option is required with --pack. e.g. --source=common');
+    }
+    const hasItemOptions =
+      this._skills !== undefined || this._agents !== undefined || this._guidelines !== undefined;
+    if (hasItemOptions) {
+      throw new Error(
+        'The --source option is required with --skills, --agents, or --guidelines. e.g. --source=common',
+      );
+    }
+    if (!canPrompt()) {
+      throw new Error(
+        'The --source option is required (or run add-item in an interactive terminal). e.g. --source=common',
+      );
+    }
+
+    const configPath = buildCatalogConfigPath(projectPath);
+    const bySource = new Map<string, AddedItemSourceResult>();
+    const failures: string[] = [];
+
+    while (true) {
+      const config = loadConfig(configPath);
+      if (Object.keys(config.sources).length === 0) {
+        throw new Error(`no sources configured. run 'agent-bolt init' to add one.`);
+      }
+
+      const sourceAlias = await this.promptSourceSelection(config.sources, bySource);
+      if (sourceAlias === null) break;
+
+      try {
+        const result = await this.addItemsFromSource({
+          projectPath,
+          sourceAlias,
+          packName: undefined,
+          optionItemsByType: undefined,
+          reporter,
+        });
+        if (result.packs.length > 0) {
+          const merged = bySource.get(sourceAlias);
+          if (merged) {
+            for (const pack of result.packs) {
+              this.mergePackInto(merged.packs, pack);
+            }
+          } else {
+            bySource.set(sourceAlias, result);
+          }
+        }
+      } catch (e) {
+        failures.push(e instanceof Error ? e.message : String(e));
+      }
+    }
+
+    return { results: [...bySource.values()], failures };
+  }
+
+  private async addItemsFromSource(options: {
+    projectPath: string;
+    sourceAlias: string;
+    packName: string | undefined;
+    optionItemsByType: Record<ItemType, string[]> | undefined;
+    reporter: ProgressReporter;
+  }): Promise<AddedItemSourceResult> {
+    const { projectPath, sourceAlias, packName, optionItemsByType, reporter } = options;
+
     const configPath = buildCatalogConfigPath(projectPath);
     const config = loadConfig(configPath);
 
-    const source = config.sources[this._source];
+    const source = config.sources[sourceAlias];
     if (!source) {
-      throw new Error(`source '${this._source}' not found in ${configPath}`);
+      throw new Error(`source '${sourceAlias}' not found in ${configPath}`);
     }
 
-    const inputItemsByType: Record<ItemType, string[]> = {
-      skills: this.parseItemNames(this._skills),
-      agents: this.parseItemNames(this._agents),
-      guidelines: this.parseItemNames(this._guidelines),
-    };
+    const interactive = packName === undefined || optionItemsByType === undefined;
+    const catalogDetail = this.resolveCatalogDetail(
+      projectPath,
+      sourceAlias,
+      source,
+      reporter,
+      interactive,
+    );
 
-    const totalInput = ITEM_TYPES.reduce((sum, type) => sum + inputItemsByType[type].length, 0);
-    if (totalInput === 0) {
-      throw new Error(
-        'No items to add. Specify at least one of --skills, --agents, or --guidelines.',
-      );
+    if (packName !== undefined) {
+      const packDetail = catalogDetail.find((pack) => pack.name === packName);
+      if (!packDetail) {
+        throw new Error(
+          `unknown pack in source '${sourceAlias}': ${packName}. run 'agent-bolt list-packs --source=${sourceAlias}' to see available packs.`,
+        );
+      }
+      const pack = await this.addItemsToPack({
+        configPath,
+        config,
+        sourceAlias,
+        packDetail,
+        optionItemsByType,
+      });
+      return { sourceAlias, packs: [pack] };
     }
 
-    const catalogDir = resolveCatalogDir(projectPath, this._source, source);
-    const catalogDetail = parseCatalogDetail(catalogDir);
-
-    const packDetail = catalogDetail.find((packDetail) => packDetail.name === this._pack);
-    if (!packDetail) {
-      throw new Error(
-        `unknown pack in source '${this._source}': ${this._pack}. run 'agent-bolt list-packs --source=${this._source}' to see available packs.`,
-      );
+    if (catalogDetail.length === 0) {
+      throw new Error(`source '${sourceAlias}' has no packs.`);
     }
+
+    const packs: AddedItemPack[] = [];
+    while (true) {
+      const addedByPack = new Map<string, number>();
+      for (const addedPack of packs) {
+        const prev = addedByPack.get(addedPack.packName) ?? 0;
+        addedByPack.set(addedPack.packName, prev + this.countAddedItems(addedPack));
+      }
+
+      const nextPackName = await this.promptPackSelection(catalogDetail, sourceAlias, addedByPack);
+      if (nextPackName === null) break;
+
+      const packDetail = catalogDetail.find((pack) => pack.name === nextPackName)!;
+      const freshConfig = loadConfig(configPath);
+      const pack = await this.addItemsToPack({
+        configPath,
+        config: freshConfig,
+        sourceAlias,
+        packDetail,
+        optionItemsByType: undefined,
+      });
+      if (this.countAddedItems(pack) > 0) {
+        this.mergePackInto(packs, pack);
+      }
+    }
+
+    return { sourceAlias, packs };
+  }
+
+  private mergePackInto(packs: AddedItemPack[], pack: AddedItemPack): void {
+    const existing = packs.find((existingPack) => existingPack.packName === pack.packName);
+    if (!existing) {
+      packs.push(pack);
+      return;
+    }
+
+    existing.packCreated = existing.packCreated || pack.packCreated;
+    for (const itemType of ITEM_TYPES) {
+      existing.addedItems[itemType].push(...pack.addedItems[itemType]);
+      existing.skippedItems[itemType].push(...pack.skippedItems[itemType]);
+    }
+  }
+
+  private async addItemsToPack(options: {
+    configPath: string;
+    config: Config;
+    sourceAlias: string;
+    packDetail: PackDetail;
+    optionItemsByType: Record<ItemType, string[]> | undefined;
+  }): Promise<AddedItemPack> {
+    const { configPath, config, sourceAlias, packDetail, optionItemsByType } = options;
+
+    const packName = packDetail.name;
 
     const validItemsByType: Record<ItemType, Set<string>> = {
       skills: new Set(packDetail.items.skills.map((item) => item.name)),
@@ -76,13 +268,22 @@ export class AddItemCommand {
       packDetail.items.guidelines.map((guideline) => [guideline.name, guideline.recommended]),
     );
 
-    const existingPacks = config.packs[this._source];
-    const existingPack = existingPacks ? existingPacks[this._pack] : undefined;
+    const existingPacks = config.packs[sourceAlias];
+    const existingPack = existingPacks ? existingPacks[packName] : undefined;
     const existingItemsByType: Record<ItemType, Set<string>> = {
       skills: new Set(existingPack?.skills ?? []),
       agents: new Set(existingPack?.agents ?? []),
       guidelines: new Set(Object.keys(existingPack?.guidelines ?? {})),
     };
+
+    let inputItemsByType: Record<ItemType, string[]> | undefined = optionItemsByType;
+    if (inputItemsByType === undefined) {
+      inputItemsByType = await this.promptItemSelection(
+        sourceAlias,
+        packDetail,
+        existingItemsByType,
+      );
+    }
 
     const unknownItems: Record<ItemType, string[]> = { skills: [], agents: [], guidelines: [] };
     const skippedItems: Record<ItemType, string[]> = { skills: [], agents: [], guidelines: [] };
@@ -109,9 +310,9 @@ export class AddItemCommand {
       );
       throw new Error(
         [
-          `unknown items in pack '${this._pack}':`,
+          `unknown items in pack '${packName}':`,
           lines.join('\n'),
-          `run 'agent-bolt list-items --source=${this._source} --pack=${this._pack}' to see available items.`,
+          `run 'agent-bolt list-items --source=${sourceAlias} --pack=${packName}' to see available items.`,
         ].join('\n'),
       );
     }
@@ -119,7 +320,7 @@ export class AddItemCommand {
     const addedCount = ITEM_TYPES.reduce((sum, type) => sum + addedItems[type].length, 0);
     if (addedCount > 0) {
       editConfigFile(configPath, (document) => {
-        const packPath = ['packs', this._source, this._pack];
+        const packPath = ['packs', sourceAlias, packName];
         if (existingPack) {
           for (const itemType of ITEM_TYPES) {
             const itemNames = addedItems[itemType];
@@ -163,12 +364,182 @@ export class AddItemCommand {
     }
 
     return {
-      sourceAlias: this._source,
-      packName: this._pack,
+      packName,
       packCreated: existingPack === undefined,
       addedItems,
       skippedItems,
     };
+  }
+
+  private resolveCatalogDetail(
+    projectPath: string,
+    sourceAlias: string,
+    source: Source,
+    reporter: ProgressReporter,
+    interactive: boolean,
+  ): PackDetail[] {
+    if (!interactive) {
+      const catalogDir = resolveCatalogDir(projectPath, sourceAlias, source);
+      return parseCatalogDetail(catalogDir);
+    }
+
+    reporter.start(`Resolving source '${sourceAlias}'`);
+    try {
+      const catalogDir = resolveCatalogDir(projectPath, sourceAlias, source);
+      const catalogDetail = parseCatalogDetail(catalogDir);
+      reporter.succeed(`source '${sourceAlias}'`);
+      return catalogDetail;
+    } catch (e) {
+      reporter.stop();
+      throw e;
+    }
+  }
+
+  private async promptSourceSelection(
+    sources: Record<string, Source>,
+    bySource: Map<string, AddedItemSourceResult>,
+  ): Promise<string | null> {
+    const entries = Object.entries(sources);
+    const aliasWidth = Math.max(0, ...entries.map(([alias]) => alias.length));
+
+    const sourceChoices = entries.map(([alias, source]) => {
+      const location = source.type === 'local' ? source.path : source.url;
+      const added = bySource.get(alias);
+      const addedCount = added
+        ? added.packs.reduce((sum, pack) => sum + this.countAddedItems(pack), 0)
+        : 0;
+      const addedNote = addedCount > 0 ? chalk.dim(`  · added ${addedCount}`) : '';
+      return {
+        name: `${alias.padEnd(aliasWidth)}  ${chalk.dim(`(${source.type} · ${location})`)}${addedNote}`,
+        value: alias,
+        short: alias,
+      };
+    });
+
+    return select<string | null>({
+      message: 'Select a source (or finish)',
+      choices: [...sourceChoices, new Separator(), { name: 'Done', value: null }],
+      loop: false,
+      pageSize: pageSizeFor(sourceChoices.length + 2),
+    });
+  }
+
+  private async promptPackSelection(
+    catalogDetail: PackDetail[],
+    sourceAlias: string,
+    addedByPack: Map<string, number>,
+  ): Promise<string | null> {
+    const rows = alignPackRows(
+      catalogDetail.map((pack) => ({
+        name: pack.name,
+        counts: {
+          skills: pack.items.skills.length,
+          agents: pack.items.agents.length,
+          guidelines: pack.items.guidelines.length,
+        },
+      })),
+    );
+
+    const packChoices = rows.map((row) => {
+      const added = addedByPack.get(row.name) ?? 0;
+      const addedNote = added > 0 ? chalk.dim(`  · added ${added}`) : '';
+      return {
+        name: `${row.paddedName}  ${row.counts}${addedNote}`,
+        value: row.name,
+        short: row.name,
+      };
+    });
+
+    return select<string | null>({
+      message: `Select a pack in source '${sourceAlias}' (or finish)`,
+      choices: [...packChoices, new Separator(), { name: 'Done', value: null }],
+      loop: false,
+      pageSize: pageSizeFor(packChoices.length + 2),
+    });
+  }
+
+  private async promptItemSelection(
+    sourceAlias: string,
+    packDetail: PackDetail,
+    existingItemsByType: Record<ItemType, Set<string>>,
+  ): Promise<Record<ItemType, string[]>> {
+    const empty: Record<ItemType, string[]> = { skills: [], agents: [], guidelines: [] };
+
+    const nameWidth = Math.max(
+      0,
+      ...ITEM_TYPES.flatMap((itemType) =>
+        packDetail.items[itemType].map((item) => item.name.length),
+      ),
+    );
+
+    const hasSelectable = ITEM_TYPES.some((itemType) =>
+      packDetail.items[itemType].some((item) => !existingItemsByType[itemType].has(item.name)),
+    );
+    if (!hasSelectable) {
+      const totalItems = ITEM_TYPES.reduce(
+        (sum, itemType) => sum + packDetail.items[itemType].length,
+        0,
+      );
+      const note =
+        totalItems === 0
+          ? `pack '${packDetail.name}' has no items`
+          : `all items in '${packDetail.name}' are already added`;
+      console.log(chalk.dim(`  ${note}`));
+      return empty;
+    }
+
+    type ItemChoice = {
+      name: string;
+      value: { type: ItemType; name: string };
+      short: string;
+      disabled: string | false;
+    };
+    const choices: (Separator | ItemChoice)[] = [];
+
+    const rowWidth = Math.max(
+      0,
+      ...ITEM_TYPES.flatMap((itemType) =>
+        packDetail.items[itemType].map(
+          (item) => nameWidth + 2 + visibleWidth(truncate(item.description, 50)),
+        ),
+      ),
+    );
+
+    for (const itemType of ITEM_TYPES) {
+      const items = packDetail.items[itemType];
+      if (items.length === 0) continue;
+
+      if (choices.length > 0) choices.push(new Separator(' '));
+      choices.push(itemSectionHeader(itemType, rowWidth));
+
+      for (const item of items) {
+        const alreadyAdded = existingItemsByType[itemType].has(item.name);
+        choices.push({
+          name: `${item.name.padEnd(nameWidth)}  ${chalk.dim(truncate(item.description, 50))}`,
+          value: { type: itemType, name: item.name },
+          short: item.name,
+          disabled: alreadyAdded ? '(already added)' : false,
+        });
+      }
+    }
+
+    const selected = await checkbox({
+      message: `Select items to add to '${sourceAlias}/${packDetail.name}'`,
+      choices,
+      loop: false,
+      pageSize: pageSizeFor(choices.length),
+      theme: { icon: { disabledUnchecked: '✓' } },
+    });
+
+    const result: Record<ItemType, string[]> = { skills: [], agents: [], guidelines: [] };
+    for (const { type, name } of selected) {
+      result[type].push(name);
+    }
+    return result;
+  }
+
+  private countAddedItems(pack: AddedItemPack): number {
+    return ITEM_TYPES.reduce((sum, itemType) => sum + pack.addedItems[itemType].length, 0);
   }
 
   private parseItemNames(value?: string) {
