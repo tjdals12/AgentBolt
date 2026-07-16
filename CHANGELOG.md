@@ -5,6 +5,13 @@
 - add interactive selection to add-item ([8e009c3](https://github.com/tjdals12/AgentBolt/commit/8e009c3dba98f42a080f605ab94fb12bc6a2f0fc))
 - add interactive selection to remove-item ([79bf5c6](https://github.com/tjdals12/AgentBolt/commit/79bf5c6fda571892399d66f47a70b29452fd4d49))
 
+# [1.2.0](https://github.com/tjdals12/AgentBolt/compare/v1.1.0...v1.2.0) (2026-07-15)
+
+### Features
+
+- add interactive pack selection to add-pack and remove-pack ([e9cfc42](https://github.com/tjdals12/AgentBolt/commit/e9cfc42b4a853e48edaa75be4cc396abcccf3d73))
+- add interactive source selection to add-pack and remove-pack ([3b0bb8c](https://github.com/tjdals12/AgentBolt/commit/3b0bb8cdcb74e973c386afe5d2a29087c8221221))
+
 # [1.2.0-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.1.0...v1.2.0-next.1) (2026-07-15)
 
 ### Features
