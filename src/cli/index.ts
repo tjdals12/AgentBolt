@@ -259,8 +259,8 @@ program
   .description(
     'Remove items from a source/pack in the config (prunes the pack section if it becomes empty)',
   )
-  .requiredOption('--source <alias>', 'Target source to remove the items from (required)')
-  .requiredOption('--pack <name>', 'Target pack to remove the items from (required)')
+  .option('--source <alias>', 'Target source to remove the items from. Omit to pick interactively')
+  .option('--pack <name>', 'Target pack to remove the items from. Omit to pick interactively')
   .option('--skills <list>', 'Skill names to remove (comma separated)')
   .option('--agents <list>', 'Agent names to remove (comma separated)')
   .option('--guidelines <list>', 'Guideline names to remove (comma separated)')
@@ -268,14 +268,17 @@ program
     'after',
     dedent`
     Examples:
+      $ agent-bolt remove-item  # pick a source, then packs and items, interactively
+      $ agent-bolt remove-item --source=common  # pick packs, then items, interactively
+      $ agent-bolt remove-item --source=common --pack=git-workflow  # pick items interactively
       $ agent-bolt remove-item --source=common --pack=git-workflow --skills=create-commit,clean-code
       $ agent-bolt remove-item --source=common --pack=git-workflow --skills=create-commit --agents=code-reviewer
     `,
   )
   .action(
     async (options: {
-      source: string;
-      pack: string;
+      source?: string;
+      pack?: string;
       skills?: string;
       agents?: string;
       guidelines?: string;
@@ -284,7 +287,7 @@ program
       try {
         const { RemoveItemCommand } = await import('#catalog/commands/remove-item.js');
         const command = new RemoveItemCommand(options);
-        const result = command.execute(projectPath);
+        const result = await command.execute(projectPath);
         renderRemoveItemResult(result);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);

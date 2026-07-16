@@ -219,6 +219,8 @@ $ agent-bolt remove-item --source=common --pack=common --skills=pr-review
 ...
 ```
 
+아이템 옵션을 빼면 아이템을 목록에서 골라 제거합니다. `--pack`까지 빼면 팩을 먼저 고르고, `--source`까지 빼면 완전 대화형으로 동작해 소스와 팩을 오가며 계속 제거할 수 있습니다.
+
 이 명령들은 설정 파일을 바꿀 뿐입니다. 실제 설치는 `sync`에서 이루어집니다.
 
 ### 에이전트에 설치하기
@@ -598,16 +600,18 @@ agent-bolt remove-pack [--source <alias>] [--packs <list>]
 설정에서 특정 아이템을 제거합니다.
 
 ```text
-agent-bolt remove-item --source <alias> --pack <name> [options]
+agent-bolt remove-item [--source <alias>] [--pack <name>] [options]
 ```
 
-| 옵션                  | 설명                                   | 필수/선택 | 기본값 |
-| --------------------- | -------------------------------------- | --------- | ------ |
-| `--source <alias>`    | 대상 카탈로그                          | 필수      | —      |
-| `--pack <name>`       | 대상 패키지                            | 필수      | —      |
-| `--skills <list>`     | 제거할 스킬 이름. 콤마로 구분          | 선택      | —      |
-| `--agents <list>`     | 제거할 서브 에이전트 이름. 콤마로 구분 | 선택      | —      |
-| `--guidelines <list>` | 제거할 가이드라인 이름. 콤마로 구분    | 선택      | —      |
+| 옵션                  | 설명                                   | 필수/선택 | 기본값      |
+| --------------------- | -------------------------------------- | --------- | ----------- |
+| `--source <alias>`    | 대상 카탈로그                          | 선택      | 대화형 선택 |
+| `--pack <name>`       | 대상 패키지                            | 선택      | 대화형 선택 |
+| `--skills <list>`     | 제거할 스킬 이름. 콤마로 구분          | 선택      | —           |
+| `--agents <list>`     | 제거할 서브 에이전트 이름. 콤마로 구분 | 선택      | —           |
+| `--guidelines <list>` | 제거할 가이드라인 이름. 콤마로 구분    | 선택      | —           |
+
+아이템 옵션을 생략하면 아이템을 대화형으로 고르고, `--pack`까지 생략하면 팩을 먼저 고르며, `--source`까지 생략하면 여러 source를 오가며 반복합니다. `--pack`은 `--source`와, 아이템 옵션은 `--pack`과 함께 써야 합니다.
 
 ### `agent-bolt sync`
 

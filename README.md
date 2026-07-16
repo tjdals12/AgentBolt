@@ -219,6 +219,8 @@ $ agent-bolt remove-item --source=common --pack=common --skills=pr-review
 ...
 ```
 
+Omit the item options to pick items from a checklist. Omit `--pack` too and `remove-item` picks a pack first; omit `--source` as well and it goes fully interactive, looping over sources and packs until you're done.
+
 These commands only edit your config file. The actual installation happens with `sync`.
 
 ### Install into your agents
@@ -598,16 +600,18 @@ Omitting `--packs` picks packages interactively; omitting `--source` as well pic
 Removes specific items from your config.
 
 ```text
-agent-bolt remove-item --source <alias> --pack <name> [options]
+agent-bolt remove-item [--source <alias>] [--pack <name>] [options]
 ```
 
-| Option                | Description                                    | Required | Default |
-| --------------------- | ---------------------------------------------- | -------- | ------- |
-| `--source <alias>`    | Target catalog                                 | Required | —       |
-| `--pack <name>`       | Target package                                 | Required | —       |
-| `--skills <list>`     | Names of skills to remove. Comma-separated     | Optional | —       |
-| `--agents <list>`     | Names of subagents to remove. Comma-separated  | Optional | —       |
-| `--guidelines <list>` | Names of guidelines to remove. Comma-separated | Optional | —       |
+| Option                | Description                                    | Required | Default            |
+| --------------------- | ---------------------------------------------- | -------- | ------------------ |
+| `--source <alias>`    | Target catalog                                 | Optional | Interactive prompt |
+| `--pack <name>`       | Target package                                 | Optional | Interactive prompt |
+| `--skills <list>`     | Names of skills to remove. Comma-separated     | Optional | —                  |
+| `--agents <list>`     | Names of subagents to remove. Comma-separated  | Optional | —                  |
+| `--guidelines <list>` | Names of guidelines to remove. Comma-separated | Optional | —                  |
+
+Omitting the item options picks items interactively; omitting `--pack` too picks a pack first; omitting `--source` as well loops over sources. `--pack` requires `--source`, and the item options require `--pack`.
 
 ### `agent-bolt sync`
 
