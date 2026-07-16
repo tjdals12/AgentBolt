@@ -200,11 +200,13 @@ Use `add-item` to add just specific items from a package.
 $ agent-bolt add-item --source=common --pack=backend --skills=nestjs-expert
 
 ▌ Agent Bolt: Added 1 item to common/backend
-  (created pack backend in common)
+  (added new pack 'backend' in source 'common')
 
   + 🔧 nestjs-expert
 ...
 ```
+
+Omit the item options to pick items from a checklist. Omit `--pack` too and `add-item` picks a pack first; omit `--source` as well and it goes fully interactive, looping over sources and packs until you're done.
 
 Use `remove-pack` and `remove-item` to drop packages or items you've added.
 
@@ -216,6 +218,8 @@ $ agent-bolt remove-item --source=common --pack=common --skills=pr-review
   - 🔧 pr-review
 ...
 ```
+
+Omit the item options to pick items from a checklist. Omit `--pack` too and `remove-item` picks a pack first; omit `--source` as well and it goes fully interactive, looping over sources and packs until you're done.
 
 These commands only edit your config file. The actual installation happens with `sync`.
 
@@ -563,16 +567,18 @@ Omitting `--packs` picks packages interactively; omitting `--source` as well pic
 Adds specific items to your config. Creates the package entry if it doesn't exist yet.
 
 ```text
-agent-bolt add-item --source <alias> --pack <name> [options]
+agent-bolt add-item [--source <alias>] [--pack <name>] [options]
 ```
 
-| Option                | Description                                 | Required | Default |
-| --------------------- | ------------------------------------------- | -------- | ------- |
-| `--source <alias>`    | Target catalog                              | Required | —       |
-| `--pack <name>`       | Target package                              | Required | —       |
-| `--skills <list>`     | Names of skills to add. Comma-separated     | Optional | —       |
-| `--agents <list>`     | Names of subagents to add. Comma-separated  | Optional | —       |
-| `--guidelines <list>` | Names of guidelines to add. Comma-separated | Optional | —       |
+| Option                | Description                                 | Required | Default            |
+| --------------------- | ------------------------------------------- | -------- | ------------------ |
+| `--source <alias>`    | Target catalog                              | Optional | Interactive prompt |
+| `--pack <name>`       | Target package                              | Optional | Interactive prompt |
+| `--skills <list>`     | Names of skills to add. Comma-separated     | Optional | —                  |
+| `--agents <list>`     | Names of subagents to add. Comma-separated  | Optional | —                  |
+| `--guidelines <list>` | Names of guidelines to add. Comma-separated | Optional | —                  |
+
+Omitting the item options picks items interactively; omitting `--pack` too picks a pack first; omitting `--source` as well loops over sources. `--pack` requires `--source`, and the item options require `--pack`.
 
 ### `agent-bolt remove-pack`
 
@@ -594,16 +600,18 @@ Omitting `--packs` picks packages interactively; omitting `--source` as well pic
 Removes specific items from your config.
 
 ```text
-agent-bolt remove-item --source <alias> --pack <name> [options]
+agent-bolt remove-item [--source <alias>] [--pack <name>] [options]
 ```
 
-| Option                | Description                                    | Required | Default |
-| --------------------- | ---------------------------------------------- | -------- | ------- |
-| `--source <alias>`    | Target catalog                                 | Required | —       |
-| `--pack <name>`       | Target package                                 | Required | —       |
-| `--skills <list>`     | Names of skills to remove. Comma-separated     | Optional | —       |
-| `--agents <list>`     | Names of subagents to remove. Comma-separated  | Optional | —       |
-| `--guidelines <list>` | Names of guidelines to remove. Comma-separated | Optional | —       |
+| Option                | Description                                    | Required | Default            |
+| --------------------- | ---------------------------------------------- | -------- | ------------------ |
+| `--source <alias>`    | Target catalog                                 | Optional | Interactive prompt |
+| `--pack <name>`       | Target package                                 | Optional | Interactive prompt |
+| `--skills <list>`     | Names of skills to remove. Comma-separated     | Optional | —                  |
+| `--agents <list>`     | Names of subagents to remove. Comma-separated  | Optional | —                  |
+| `--guidelines <list>` | Names of guidelines to remove. Comma-separated | Optional | —                  |
+
+Omitting the item options picks items interactively; omitting `--pack` too picks a pack first; omitting `--source` as well loops over sources. `--pack` requires `--source`, and the item options require `--pack`.
 
 ### `agent-bolt sync`
 

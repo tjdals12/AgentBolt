@@ -1,3 +1,23 @@
+# [1.3.0-next.2](https://github.com/tjdals12/AgentBolt/compare/v1.3.0-next.1...v1.3.0-next.2) (2026-07-16)
+
+### Bug Fixes
+
+- show pack fill state and disable full packs in add-item picker ([#7](https://github.com/tjdals12/AgentBolt/issues/7)) ([b75018b](https://github.com/tjdals12/AgentBolt/commit/b75018b1f772fa05a4b3837b3c8c2c3f37c79da0))
+
+# [1.3.0-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.2.0...v1.3.0-next.1) (2026-07-16)
+
+### Features
+
+- add interactive selection to add-item ([8e009c3](https://github.com/tjdals12/AgentBolt/commit/8e009c3dba98f42a080f605ab94fb12bc6a2f0fc))
+- add interactive selection to remove-item ([79bf5c6](https://github.com/tjdals12/AgentBolt/commit/79bf5c6fda571892399d66f47a70b29452fd4d49))
+
+# [1.2.0-next.2](https://github.com/tjdals12/AgentBolt/compare/v1.2.0-next.1...v1.2.0-next.2) (2026-07-16)
+
+### Features
+
+- add interactive selection to add-item ([8e009c3](https://github.com/tjdals12/AgentBolt/commit/8e009c3dba98f42a080f605ab94fb12bc6a2f0fc))
+- add interactive selection to remove-item ([79bf5c6](https://github.com/tjdals12/AgentBolt/commit/79bf5c6fda571892399d66f47a70b29452fd4d49))
+
 # [1.2.0](https://github.com/tjdals12/AgentBolt/compare/v1.1.0...v1.2.0) (2026-07-15)
 
 ### Features
