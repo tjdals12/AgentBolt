@@ -73,6 +73,11 @@ export const Banner = {
     printBanner(chalk.red, text);
   },
 
+  removeItems(count: number): void {
+    const text = count === 0 ? 'Nothing to remove' : `Removed ${count} ${plural(count, 'item')}`;
+    printBanner(chalk.red, text);
+  },
+
   sync(changed: boolean): void {
     printBanner(chalk.blue, changed ? 'Sync complete' : 'Already up to date');
   },
