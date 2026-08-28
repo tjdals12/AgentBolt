@@ -216,8 +216,11 @@ config is a hand edit.
    write into the config: `always`, or `conditional` with the globs it applies
    to.
 
-3. **Show an item before recommending or installing it** — the response
-   carries the full body (trimmed here):
+   Descriptions are how you narrow the field, not how you decide. Shortlist
+   the items worth a closer look and read each one in step 3.
+
+3. **Read the body of every item you shortlist** — the response carries the
+   whole item, body included (trimmed here):
 
    ```bash
    agent-bolt show-item --source=common --pack=common --item=create-commit --json
@@ -243,10 +246,27 @@ config is a hand edit.
    }
    ```
 
+   `instructions` is what the item will install into the project, and it is
+   the only place its real behavior is written down. Check that it delivers
+   what its description promises — an item whose body does not match its
+   description is a poor fit whatever the description says — and that what it
+   does suits this project. `assets` are extra files the item ships with;
+   `toolConfig` is the per-tool settings it carries.
+
 4. **When the user asks what fits the project**, the judgment is yours, made
    in this conversation: read the project itself — stack, structure,
-   conventions — and weigh it against the item descriptions and bodies.
-   Present what you'd pick and why, and let the user decide.
+   conventions — and weigh it against the bodies you read in step 3. Present
+   what you'd pick, what in each body decided it, and let the user decide.
+
+**Guardrails**
+
+- Never recommend an item whose body you have not read. A description is a
+  claim about the item, not the item.
+- Read the bodies of the shortlist, not of the whole catalog. When a pack is
+  large, narrow it with the user first.
+- A guideline's body is installed into the project's rules or instructions
+  file as written, and every agent working in the project reads it from then
+  on. Say what a guideline imposes before recommending it.
 
 ## Install items
 
