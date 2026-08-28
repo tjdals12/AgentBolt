@@ -30,6 +30,12 @@ export class SyncCommand {
     return syncResult;
   }
 
+  toJson(result: SyncResult) {
+    return {
+      tools: result.map(({ tool, counts, changes }) => ({ tool, counts, changes })),
+    };
+  }
+
   private buildSyncResult(toolPlans: ToolPlan[], changeSet: ChangeSet): SyncResult {
     return toolPlans.map((toolPlan) => {
       const { tool, renderedSkills, renderedAgents, renderedGuidelines } = toolPlan;

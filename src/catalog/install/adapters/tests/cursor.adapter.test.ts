@@ -9,6 +9,7 @@ function makeSkill(overrides: Partial<Skill> = {}): Skill {
     name: 'create-commit',
     description: 'Creates commits',
     instructions: 'Do the thing.',
+    instructionsPath: '/catalog/packs/pack/skills/create-commit/instructions.md',
     sourceDir: '/catalog/packs/pack/skills/create-commit',
     assets: [],
     ...overrides,
@@ -20,6 +21,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     name: 'reviewer',
     description: 'Reviews code',
     instructions: 'Be helpful.',
+    instructionsPath: '/catalog/packs/pack/agents/reviewer/instructions.md',
     ...overrides,
   };
 }
@@ -30,6 +32,7 @@ function makeGuideline(overrides: Partial<Guideline> = {}): Guideline {
     description: 'Commit conventions',
     recommended: { load: 'always' },
     body: 'Write good commits.',
+    bodyPath: '/catalog/packs/pack/guidelines/commit-rules/body.md',
     ...overrides,
   };
 }

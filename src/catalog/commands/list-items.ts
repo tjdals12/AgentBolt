@@ -69,6 +69,14 @@ export class ListItemsCommand {
     };
   }
 
+  toJson(result: ListItemsResult) {
+    const { sourceCatalogs, failures } = result;
+    return {
+      sources: sourceCatalogs.map(({ alias, type, packs }) => ({ alias, type, packs })),
+      failures,
+    };
+  }
+
   private parsePackNames(): string[] {
     if (!this._packs) return [];
     const packs = this._packs

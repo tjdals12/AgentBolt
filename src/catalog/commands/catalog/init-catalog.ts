@@ -61,4 +61,9 @@ export class InitCatalogCommand {
       createdPaths: [CATALOG_MANIFEST_FILENAME, `${PACKS_DIR_NAME}/`],
     };
   }
+
+  toJson(result: InitCatalogResult) {
+    const { catalogDir, name, description, createdPaths } = result;
+    return { catalogDir, name, description, createdPaths };
+  }
 }

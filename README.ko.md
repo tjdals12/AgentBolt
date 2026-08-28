@@ -507,6 +507,7 @@ agent-bolt init [options]
 | `--tools <list>`  | 아이템을 설치할 에이전트. 콤마로 구분 (예: `claude,codex,cursor,copilot,opencode`) | 선택      | 대화형 선택 |
 | `--source <spec>` | 아이템을 가져올 카탈로그. `<별칭>=<형식>:<위치>` (예: `dev=local:./catalog`)       | 선택      | 대화형 선택 |
 | `--force`         | 기존 설정 파일을 덮어씀                                                            | 선택      | —           |
+| `--json`          | 결과를 JSON으로 출력                                                               | 선택      | —           |
 
 ### `agent-bolt list-packs`
 
@@ -516,9 +517,10 @@ agent-bolt init [options]
 agent-bolt list-packs [options]
 ```
 
-| 옵션               | 설명            | 필수/선택 | 기본값        |
-| ------------------ | --------------- | --------- | ------------- |
-| `--source <alias>` | 조회할 카탈로그 | 선택      | 전체 카탈로그 |
+| 옵션               | 설명                 | 필수/선택 | 기본값        |
+| ------------------ | -------------------- | --------- | ------------- |
+| `--source <alias>` | 조회할 카탈로그      | 선택      | 전체 카탈로그 |
+| `--json`           | 결과를 JSON으로 출력 | 선택      | —             |
 
 ### `agent-bolt list-items`
 
@@ -532,6 +534,7 @@ agent-bolt list-items [options]
 | ------------------ | -------------------------- | --------- | ------------- |
 | `--source <alias>` | 조회할 카탈로그            | 선택      | 전체 카탈로그 |
 | `--packs <list>`   | 조회할 패키지. 콤마로 구분 | 선택      | 전체 패키지   |
+| `--json`           | 결과를 JSON으로 출력       | 선택      | —             |
 
 ### `agent-bolt show-item`
 
@@ -546,6 +549,7 @@ agent-bolt show-item --source <alias> --pack <name> --item <name> [options]
 | `--source <alias>` | 아이템이 속한 카탈로그 | 필수      | —      |
 | `--pack <name>`    | 아이템이 속한 패키지   | 필수      | —      |
 | `--item <name>`    | 조회할 아이템 이름     | 필수      | —      |
+| `--json`           | 결과를 JSON으로 출력   | 선택      | —      |
 
 ### `agent-bolt add-pack`
 
@@ -559,6 +563,7 @@ agent-bolt add-pack [--source <alias>] [--packs <list>]
 | ------------------ | ------------------------------- | --------- | ----------- |
 | `--source <alias>` | 대상 카탈로그                   | 선택      | 대화형 선택 |
 | `--packs <list>`   | 추가할 패키지 이름. 콤마로 구분 | 선택      | 대화형 선택 |
+| `--json`           | 결과를 JSON으로 출력            | 선택      | —           |
 
 `--packs`를 생략하면 패키지를 대화형으로 고르고, `--source`까지 생략하면 카탈로그를 먼저 고른 뒤 여러 source를 오가며 반복합니다. `--packs`는 `--source`와 함께 써야 합니다.
 
@@ -577,6 +582,7 @@ agent-bolt add-item [--source <alias>] [--pack <name>] [options]
 | `--skills <list>`     | 추가할 스킬 이름. 콤마로 구분          | 선택      | —           |
 | `--agents <list>`     | 추가할 서브 에이전트 이름. 콤마로 구분 | 선택      | —           |
 | `--guidelines <list>` | 추가할 가이드라인 이름. 콤마로 구분    | 선택      | —           |
+| `--json`              | 결과를 JSON으로 출력                   | 선택      | —           |
 
 아이템 옵션을 생략하면 아이템을 대화형으로 고르고, `--pack`까지 생략하면 팩을 먼저 고르며, `--source`까지 생략하면 여러 source를 오가며 반복합니다. `--pack`은 `--source`와, 아이템 옵션은 `--pack`과 함께 써야 합니다.
 
@@ -592,6 +598,7 @@ agent-bolt remove-pack [--source <alias>] [--packs <list>]
 | ------------------ | ------------------------------- | --------- | ----------- |
 | `--source <alias>` | 대상 카탈로그                   | 선택      | 대화형 선택 |
 | `--packs <list>`   | 제거할 패키지 이름. 콤마로 구분 | 선택      | 대화형 선택 |
+| `--json`           | 결과를 JSON으로 출력            | 선택      | —           |
 
 `--packs`를 생략하면 패키지를 대화형으로 고르고, `--source`까지 생략하면 카탈로그를 먼저 고른 뒤 여러 source를 오가며 반복합니다. `--packs`는 `--source`와 함께 써야 합니다.
 
@@ -610,6 +617,7 @@ agent-bolt remove-item [--source <alias>] [--pack <name>] [options]
 | `--skills <list>`     | 제거할 스킬 이름. 콤마로 구분          | 선택      | —           |
 | `--agents <list>`     | 제거할 서브 에이전트 이름. 콤마로 구분 | 선택      | —           |
 | `--guidelines <list>` | 제거할 가이드라인 이름. 콤마로 구분    | 선택      | —           |
+| `--json`              | 결과를 JSON으로 출력                   | 선택      | —           |
 
 아이템 옵션을 생략하면 아이템을 대화형으로 고르고, `--pack`까지 생략하면 팩을 먼저 고르며, `--source`까지 생략하면 여러 source를 오가며 반복합니다. `--pack`은 `--source`와, 아이템 옵션은 `--pack`과 함께 써야 합니다.
 
@@ -618,16 +626,24 @@ agent-bolt remove-item [--source <alias>] [--pack <name>] [options]
 설정에 담긴 아이템을 각 에이전트에 설치합니다.
 
 ```text
-agent-bolt sync
+agent-bolt sync [options]
 ```
+
+| 옵션     | 설명                 | 필수/선택 | 기본값 |
+| -------- | -------------------- | --------- | ------ |
+| `--json` | 결과를 JSON으로 출력 | 선택      | —      |
 
 ### `agent-bolt check`
 
 설치 상태가 설정 파일과 어긋났는지 검사합니다. 어긋나면 종료 코드 1 을 반환합니다.
 
 ```text
-agent-bolt check
+agent-bolt check [options]
 ```
+
+| 옵션     | 설명                 | 필수/선택 | 기본값 |
+| -------- | -------------------- | --------- | ------ |
+| `--json` | 결과를 JSON으로 출력 | 선택      | —      |
 
 다음은 카탈로그를 만드는 쪽의 `catalog` 명령입니다.
 
@@ -639,11 +655,12 @@ agent-bolt check
 agent-bolt catalog init [options]
 ```
 
-| 옵션                   | 설명              | 필수/선택 | 기본값        |
-| ---------------------- | ----------------- | --------- | ------------- |
-| `--dir <dir>`          | 카탈로그 디렉터리 | 선택      | 현재 디렉터리 |
-| `--name <name>`        | 카탈로그 이름     | 선택      | 디렉터리 이름 |
-| `--description <text>` | 카탈로그 설명     | 선택      | "TODO: ..."   |
+| 옵션                   | 설명                 | 필수/선택 | 기본값        |
+| ---------------------- | -------------------- | --------- | ------------- |
+| `--dir <dir>`          | 카탈로그 디렉터리    | 선택      | 현재 디렉터리 |
+| `--name <name>`        | 카탈로그 이름        | 선택      | 디렉터리 이름 |
+| `--description <text>` | 카탈로그 설명        | 선택      | "TODO: ..."   |
+| `--json`               | 결과를 JSON으로 출력 | 선택      | —             |
 
 ### `agent-bolt catalog new-pack`
 
@@ -653,10 +670,11 @@ agent-bolt catalog init [options]
 agent-bolt catalog new-pack <name> [options]
 ```
 
-| 옵션                   | 설명              | 필수/선택 | 기본값        |
-| ---------------------- | ----------------- | --------- | ------------- |
-| `--dir <dir>`          | 카탈로그 디렉터리 | 선택      | 현재 디렉터리 |
-| `--description <text>` | 패키지 설명       | 선택      | "TODO: ..."   |
+| 옵션                   | 설명                 | 필수/선택 | 기본값        |
+| ---------------------- | -------------------- | --------- | ------------- |
+| `--dir <dir>`          | 카탈로그 디렉터리    | 선택      | 현재 디렉터리 |
+| `--description <text>` | 패키지 설명          | 선택      | "TODO: ..."   |
+| `--json`               | 결과를 JSON으로 출력 | 선택      | —             |
 
 ### `agent-bolt catalog new-skill · new-agent · new-guideline`
 
@@ -673,6 +691,7 @@ agent-bolt catalog new-guideline <name> --pack <name> [options]
 | `--pack <name>`        | 아이템이 속할 패키지 | 필수      | —             |
 | `--dir <dir>`          | 카탈로그 디렉터리    | 선택      | 현재 디렉터리 |
 | `--description <text>` | 아이템 설명          | 선택      | "TODO: ..."   |
+| `--json`               | 결과를 JSON으로 출력 | 선택      | —             |
 
 ### `agent-bolt catalog validate`
 
@@ -682,9 +701,10 @@ agent-bolt catalog new-guideline <name> --pack <name> [options]
 agent-bolt catalog validate [options]
 ```
 
-| 옵션          | 설명              | 필수/선택 | 기본값        |
-| ------------- | ----------------- | --------- | ------------- |
-| `--dir <dir>` | 카탈로그 디렉터리 | 선택      | 현재 디렉터리 |
+| 옵션          | 설명                 | 필수/선택 | 기본값        |
+| ------------- | -------------------- | --------- | ------------- |
+| `--dir <dir>` | 카탈로그 디렉터리    | 선택      | 현재 디렉터리 |
+| `--json`      | 결과를 JSON으로 출력 | 선택      | —             |
 
 ## License
 

@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import type { Agent, Guideline, ItemType, Skill } from '#catalog/content/item/model.js';
 import { buildCatalogConfigPath } from '#core/paths.js';
 import { loadConfig } from '#catalog/config/load.js';
@@ -85,6 +87,62 @@ export class ShowItemCommand {
       sourceAlias: this._source,
       packName: this._pack,
       items,
+    };
+  }
+
+  toJson(result: ShowItemResult) {
+    const { sourceAlias, packName, items } = result;
+    return {
+      source: sourceAlias,
+      pack: packName,
+      items: items.map((item) => {
+        switch (item.type) {
+          case 'skills': {
+            const {
+              name,
+              description,
+              toolConfig,
+              instructions,
+              instructionsPath,
+              sourceDir,
+              assets,
+            } = item;
+            return {
+              type: 'skill',
+              name,
+              description,
+              toolConfig,
+              instructions,
+              instructionsPath,
+              assets: assets.map((asset) => ({ name: asset, path: path.join(sourceDir, asset) })),
+            };
+          }
+
+          case 'agents': {
+            const { name, description, toolConfig, instructions, instructionsPath } = item;
+            return {
+              type: 'agent',
+              name,
+              description,
+              toolConfig,
+              instructions,
+              instructionsPath,
+            };
+          }
+
+          case 'guidelines': {
+            const { name, description, recommended, body, bodyPath } = item;
+            return {
+              type: 'guideline',
+              name,
+              description,
+              recommended,
+              body,
+              bodyPath,
+            };
+          }
+        }
+      }),
     };
   }
 }

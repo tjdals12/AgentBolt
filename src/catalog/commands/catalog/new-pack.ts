@@ -66,4 +66,9 @@ export class NewPackCommand {
       ],
     };
   }
+
+  toJson(result: NewPackResult) {
+    const { catalogDir, name, description, createdPaths } = result;
+    return { catalogDir, name, description, createdPaths };
+  }
 }

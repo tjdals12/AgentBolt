@@ -110,6 +110,11 @@ export abstract class NewItemCommand {
     };
   }
 
+  toJson(result: NewItemResult) {
+    const { catalogDir, packName, item, createdPaths } = result;
+    return { catalogDir, pack: packName, item, createdPaths };
+  }
+
   private isWithinDir(parentDir: string, dir: string): boolean {
     const abs = path.resolve(parentDir, dir);
     const rel = path.relative(parentDir, abs);

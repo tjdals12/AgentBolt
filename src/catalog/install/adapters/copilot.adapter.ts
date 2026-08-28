@@ -25,6 +25,7 @@ export class CopilotAdapter extends Adapter {
     const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       skillName,
       dir,
@@ -44,6 +45,7 @@ export class CopilotAdapter extends Adapter {
     const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       agentName,
       filePath,
@@ -69,6 +71,7 @@ export class CopilotAdapter extends Adapter {
 
     return {
       kind: 'rule-file',
+      sourceAlias,
       packName,
       guidelineName,
       filePath,
