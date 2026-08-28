@@ -86,6 +86,12 @@ export const Banner = {
     printBanner(drifted ? chalk.yellow : chalk.blue, drifted ? 'Drift detected' : 'Up to date');
   },
 
+  skill: {
+    install(name: string): void {
+      printBanner(chalk.green, `Installed ${name} skill`);
+    },
+  },
+
   catalog: {
     init(): void {
       printBanner(chalk.cyan, 'Catalog initialized');

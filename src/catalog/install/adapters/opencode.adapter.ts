@@ -7,11 +7,10 @@ import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
 
 export class OpenCodeAdapter extends Adapter {
-  private readonly skillsDir: string = '.opencode/skills';
   private readonly agentsDir: string = '.opencode/agents';
 
   constructor() {
-    super({ id: 'opencode', managedBlockFile: 'AGENTS.md' });
+    super({ id: 'opencode', skillsDir: '.opencode/skills', managedBlockFile: 'AGENTS.md' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {

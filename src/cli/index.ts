@@ -18,6 +18,7 @@ import { renderCheckResult } from './views/check.js';
 import { renderAddItemResult } from './views/add-item.js';
 import { renderRemoveItemResult } from './views/remove-item.js';
 import { renderShowItemResult } from './views/show-item.js';
+import { renderSkillInstallResult } from './views/skill-install.js';
 import { renderValidateCatalogResult } from './views/catalog/validate-catalog.js';
 import { renderInitCatalogResult } from './views/catalog/init-catalog.js';
 import { renderNewPackResult } from './views/catalog/new-pack.js';
@@ -346,6 +347,31 @@ program
     }
     if (drifted) {
       process.exitCode = 1;
+    }
+  });
+
+const skill = program.command('skill').description('Manage the agent-bolt skill (install)');
+
+skill
+  .command('install')
+  .description('Install the agent-bolt skill into each selected tool')
+  .option('--json', 'Print the result as JSON', false)
+  .addHelpText(
+    'after',
+    dedent`
+    Examples:
+      $ agent-bolt skill install
+    `,
+  )
+  .action(async (options: { json: boolean }) => {
+    const projectPath = process.cwd();
+    const { SkillInstallCommand } = await import('#catalog/commands/skill-install.js');
+    const command = new SkillInstallCommand();
+    const result = command.execute(projectPath, version);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderSkillInstallResult(result);
     }
   });
 

@@ -336,6 +336,24 @@ Here's what each marker in the output means:
 | `~`    | drifted  | Installed, but its contents differ from the catalog |
 | `-`    | orphaned | Removed from your config file but still installed   |
 
+### Install the agent skill
+
+AgentBolt ships a skill that teaches your AI agent how to drive the CLI — exploring catalogs, picking items, and syncing — through conversation. Install it into every agent in your config:
+
+```text
+$ agent-bolt skill install
+
+▌ Agent Bolt: Installed agent-bolt skill
+
+skill:   agent-bolt
+version: 1.4.0
+
+  + .claude/skills/agent-bolt
+  + .codex/skills/agent-bolt
+```
+
+The skill lands as an `agent-bolt/` directory under each agent's skills directory. It is not tracked by `sync`/`check`, and re-running `skill install` overwrites it in place — run it again after upgrading AgentBolt to keep the skill in step with the CLI.
+
 ## Creating a catalog
 
 AgentBolt ships `catalog` commands for building and managing catalogs.
@@ -639,6 +657,18 @@ Checks whether what's installed has drifted from your config file. Exits with co
 
 ```text
 agent-bolt check [options]
+```
+
+| Option   | Description              | Required | Default |
+| -------- | ------------------------ | -------- | ------- |
+| `--json` | Print the result as JSON | Optional | —       |
+
+### `agent-bolt skill install`
+
+Installs the agent-bolt skill into each agent selected in your config. Re-running it overwrites the installed copies — do this after upgrading AgentBolt.
+
+```text
+agent-bolt skill install [options]
 ```
 
 | Option   | Description              | Required | Default |

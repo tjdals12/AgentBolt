@@ -336,6 +336,24 @@ Codex   🔧 4 skills  🤖 1 agent  📋 1 guideline
 | `~`  | drifted  | 설치돼 있지만 내용이 카탈로그와 다름    |
 | `-`  | orphaned | 설정 파일에서 빠졌지만 설치는 남아 있음 |
 
+### 에이전트 스킬 설치하기
+
+AgentBolt는 AI 에이전트가 대화만으로 이 CLI를 다루도록 — 카탈로그 탐색, 아이템 선택, sync까지 — 안내하는 스킬을 함께 제공합니다. 설정에 선택된 모든 에이전트에 설치합니다.
+
+```text
+$ agent-bolt skill install
+
+▌ Agent Bolt: Installed agent-bolt skill
+
+skill:   agent-bolt
+version: 1.4.0
+
+  + .claude/skills/agent-bolt
+  + .codex/skills/agent-bolt
+```
+
+스킬은 각 에이전트의 skills 디렉터리 아래 `agent-bolt/` 디렉터리로 설치됩니다. `sync`/`check`의 관리 대상이 아니며, `skill install`을 다시 실행하면 그 자리에서 덮어씁니다 — AgentBolt를 업그레이드한 뒤 다시 실행해서 스킬을 CLI와 맞추세요.
+
 ## 카탈로그 생성
 
 AgentBolt는 카탈로그를 관리하기 위한 `catalog` 명령을 제공합니다.
@@ -639,6 +657,18 @@ agent-bolt sync [options]
 
 ```text
 agent-bolt check [options]
+```
+
+| 옵션     | 설명                 | 필수/선택 | 기본값 |
+| -------- | -------------------- | --------- | ------ |
+| `--json` | 결과를 JSON으로 출력 | 선택      | —      |
+
+### `agent-bolt skill install`
+
+agent-bolt 스킬을 설정에 선택된 각 에이전트에 설치합니다. 다시 실행하면 설치본을 덮어씁니다 — AgentBolt 업그레이드 후에 실행하세요.
+
+```text
+agent-bolt skill install [options]
 ```
 
 | 옵션     | 설명                 | 필수/선택 | 기본값 |

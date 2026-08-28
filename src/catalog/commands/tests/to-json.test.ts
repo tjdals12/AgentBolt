@@ -10,6 +10,7 @@ import { RemovePackCommand } from '#catalog/commands/remove-pack.js';
 import { AddItemCommand } from '#catalog/commands/add-item.js';
 import { RemoveItemCommand } from '#catalog/commands/remove-item.js';
 import { InitCommand } from '#catalog/commands/init.js';
+import { SkillInstallCommand } from '#catalog/commands/skill-install.js';
 import { ValidateCatalogCommand } from '#catalog/commands/catalog/validate-catalog.js';
 import { InitCatalogCommand } from '#catalog/commands/catalog/init-catalog.js';
 import { NewPackCommand } from '#catalog/commands/catalog/new-pack.js';
@@ -297,5 +298,22 @@ describe('catalog authoring toJson', () => {
       item: { name: 'n', description: 'd' },
       createdPaths: ['packs/p/skills/n/skill.json'],
     });
+  });
+});
+
+describe('SkillInstallCommand.toJson', () => {
+  it('returns the result as-is', () => {
+    const result = {
+      skill: 'agent-bolt',
+      version: '1.0.0',
+      tools: [
+        {
+          tool: 'claude' as const,
+          path: '.claude/skills/agent-bolt',
+          status: 'installed' as const,
+        },
+      ],
+    };
+    expect(new SkillInstallCommand().toJson(result)).toEqual(result);
   });
 });
