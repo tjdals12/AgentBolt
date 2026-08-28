@@ -279,6 +279,7 @@ program
   .option('--skills <list>', 'Skill names to add (comma separated)')
   .option('--agents <list>', 'Agent names to add (comma separated)')
   .option('--guidelines <list>', 'Guideline names to add (comma separated)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -297,15 +298,25 @@ program
       skills?: string;
       agents?: string;
       guidelines?: string;
+      json: boolean;
     }) => {
       const projectPath = process.cwd();
       try {
         const { AddItemCommand } = await import('#catalog/commands/add-item.js');
-        const reporter = ProgressReporter.create();
+        const reporter = ProgressReporter.create({ silent: options.json });
         const command = new AddItemCommand(options);
         const result = await command.execute(projectPath, reporter);
-        renderAddItemResult(result);
+        if (options.json) {
+          printJson(command.toJson(result));
+        } else {
+          renderAddItemResult(result);
+        }
       } catch (e) {
+        if (options.json) {
+          printJsonError(e);
+          process.exitCode = 1;
+          return;
+        }
         const message = e instanceof Error ? e.message : String(e);
         ConsoleOutput.error(message);
         process.exit(1);
@@ -323,6 +334,7 @@ program
   .option('--skills <list>', 'Skill names to remove (comma separated)')
   .option('--agents <list>', 'Agent names to remove (comma separated)')
   .option('--guidelines <list>', 'Guideline names to remove (comma separated)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -341,14 +353,24 @@ program
       skills?: string;
       agents?: string;
       guidelines?: string;
+      json: boolean;
     }) => {
       const projectPath = process.cwd();
       try {
         const { RemoveItemCommand } = await import('#catalog/commands/remove-item.js');
         const command = new RemoveItemCommand(options);
         const result = await command.execute(projectPath);
-        renderRemoveItemResult(result);
+        if (options.json) {
+          printJson(command.toJson(result));
+        } else {
+          renderRemoveItemResult(result);
+        }
       } catch (e) {
+        if (options.json) {
+          printJsonError(e);
+          process.exitCode = 1;
+          return;
+        }
         const message = e instanceof Error ? e.message : String(e);
         ConsoleOutput.error(message);
         process.exit(1);

@@ -38,6 +38,7 @@ export class AddItemCommand {
   private readonly _skills?: string;
   private readonly _agents?: string;
   private readonly _guidelines?: string;
+  private readonly _json: boolean;
 
   constructor(options: {
     source?: string;
@@ -45,15 +46,27 @@ export class AddItemCommand {
     skills?: string;
     agents?: string;
     guidelines?: string;
+    json: boolean;
   }) {
     this._source = options.source;
     this._pack = options.pack;
     this._skills = options.skills;
     this._agents = options.agents;
     this._guidelines = options.guidelines;
+    this._json = options.json;
   }
 
   async execute(projectPath: string, reporter: ProgressReporter): Promise<AddItemResult> {
+    if (this._json) {
+      const hasItemOptions =
+        this._skills !== undefined || this._agents !== undefined || this._guidelines !== undefined;
+      if (this._source === undefined || this._pack === undefined || !hasItemOptions) {
+        throw new Error(
+          `--source, --pack, and at least one of --skills/--agents/--guidelines are required with --json. e.g. --source=common --pack=git-workflow --skills=create-commit`,
+        );
+      }
+    }
+
     if (this._source !== undefined) {
       const promptPack = this._pack === undefined;
       const promptItems =
@@ -157,6 +170,22 @@ export class AddItemCommand {
     }
 
     return { results: [...bySource.values()], failures };
+  }
+
+  toJson(result: AddItemResult) {
+    const { results, failures } = result;
+    return {
+      results: results.map(({ sourceAlias, packs }) => ({
+        source: sourceAlias,
+        packs: packs.map(({ packName, packCreated, addedItems, skippedItems }) => ({
+          name: packName,
+          created: packCreated,
+          added: addedItems,
+          skipped: skippedItems,
+        })),
+      })),
+      failures,
+    };
   }
 
   private async addItemsFromSource(options: {
