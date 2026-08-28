@@ -112,6 +112,7 @@ program
   .option('--source <alias>', 'Filter to a specific source (default: all sources)')
   .option('--packs <list>', 'Filter to specific packs by name (comma separated)')
   .option('--no-pager', 'Print directly without the pager')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -122,14 +123,23 @@ program
       $ agent-bolt list-items --source=common --packs=git-workflows,frontend
     `,
   )
-  .action(async (options: { source?: string; packs?: string; pager: boolean }) => {
+  .action(async (options: { source?: string; packs?: string; pager: boolean; json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { ListItemsCommand } = await import('#catalog/commands/list-items.js');
       const command = new ListItemsCommand(options);
       const result = command.execute(projectPath);
-      withPager(() => renderListItemsResult(result), options.pager);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        withPager(() => renderListItemsResult(result), options.pager);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);
