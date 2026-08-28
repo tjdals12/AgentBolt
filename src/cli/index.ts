@@ -43,6 +43,7 @@ program
     [],
   )
   .option('--force', 'Overwrite an existing config.yml', false)
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -54,14 +55,23 @@ program
       $ agent-bolt init --tools=codex,claude,cursor,copilot,opencode --force
   `,
   )
-  .action(async (options: { tools?: string; source: string[]; force: boolean }) => {
+  .action(async (options: { tools?: string; source: string[]; force: boolean; json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { InitCommand } = await import('#catalog/commands/init.js');
       const command = new InitCommand(options);
       const result = await command.execute(projectPath);
-      renderInitResult(result, projectPath);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderInitResult(result, projectPath);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);
