@@ -24,6 +24,7 @@ import { renderNewPackResult } from './views/catalog/new-pack.js';
 import { renderNewSkillResult } from './views/catalog/new/new-skill.js';
 import { renderNewAgentResult } from './views/catalog/new/new-agent.js';
 import { renderNewGuidelineResult } from './views/catalog/new/new-guideline.js';
+import { printJson, printJsonError } from './json.js';
 
 const program = new Command();
 const require = createRequire(import.meta.url);
@@ -72,6 +73,7 @@ program
   .description('List the packs provided by the configured sources')
   .option('--source <alias>', 'Filter to a specific source (default: all sources)')
   .option('--no-pager', 'Print directly without the pager')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -80,15 +82,24 @@ program
       $ agent-bolt list-packs --source=common
     `,
   )
-  .action(async (options: { source?: string; pager: boolean }) => {
+  .action(async (options: { source?: string; pager: boolean; json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { ListPacksCommand } = await import('#catalog/commands/list-packs.js');
-      const reporter = ProgressReporter.create();
+      const reporter = ProgressReporter.create({ silent: options.json });
       const command = new ListPacksCommand(options);
       const result = command.execute(projectPath, reporter);
-      withPager(() => renderListPacksResult(result), options.pager);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        withPager(() => renderListPacksResult(result), options.pager);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);

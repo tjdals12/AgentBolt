@@ -69,4 +69,12 @@ export class ListPacksCommand {
 
     return { sourceCatalogs, failures };
   }
+
+  toJson(result: ListPacksResult) {
+    const { sourceCatalogs, failures } = result;
+    return {
+      sources: sourceCatalogs.map(({ alias, type, packs }) => ({ alias, type, packs })),
+      failures,
+    };
+  }
 }
