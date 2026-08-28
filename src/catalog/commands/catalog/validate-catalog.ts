@@ -97,6 +97,17 @@ export class ValidateCatalogCommand {
     };
   }
 
+  toJson(result: { validateCatalogResult: ValidateCatalogResult; invalid: boolean }) {
+    const { validateCatalogResult, invalid } = result;
+    const { catalogDir, catalogCounts, validationIssues } = validateCatalogResult;
+    return {
+      catalogDir,
+      counts: catalogCounts,
+      issues: validationIssues,
+      invalid,
+    };
+  }
+
   private validatePack(
     catalogDir: string,
     packDir: string,

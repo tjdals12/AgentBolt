@@ -467,6 +467,7 @@ catalog
   .command('validate')
   .description('Validate a catalog directory (structure, manifests, integrity)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -475,7 +476,7 @@ catalog
       $ agent-bolt catalog validate --dir=./my-catalog
     `,
   )
-  .action(async (options: { dir?: string }) => {
+  .action(async (options: { dir?: string; json: boolean }) => {
     const { dir } = options;
     const projectPath = process.cwd();
     const catalogDirPath = dir ? path.resolve(projectPath, dir) : projectPath;
@@ -484,11 +485,20 @@ catalog
         await import('#catalog/commands/catalog/validate-catalog.js');
       const command = new ValidateCatalogCommand();
       const { validateCatalogResult, invalid } = command.execute(catalogDirPath);
-      renderValidateCatalogResult(validateCatalogResult);
+      if (options.json) {
+        printJson(command.toJson({ validateCatalogResult, invalid }));
+      } else {
+        renderValidateCatalogResult(validateCatalogResult);
+      }
       if (invalid) {
         process.exitCode = 1;
       }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);
