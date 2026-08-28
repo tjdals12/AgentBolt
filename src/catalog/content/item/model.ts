@@ -13,12 +13,18 @@ export type GuidelineItem = Item & { recommended: GuidelineRecommendation };
 export type Skill = Item & {
   toolConfig?: ToolConfig;
   instructions: string;
+  instructionsPath: string;
   sourceDir: string;
   assets: string[];
 };
 
-export type Agent = Item & { toolConfig?: ToolConfig; instructions: string };
+export type Agent = Item & {
+  toolConfig?: ToolConfig;
+  instructions: string;
+  instructionsPath: string;
+};
 
 export type Guideline = GuidelineItem & {
   body: string;
+  bodyPath: string;
 };

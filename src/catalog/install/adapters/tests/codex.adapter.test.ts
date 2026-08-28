@@ -9,6 +9,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     name: 'reviewer',
     description: 'Reviews code',
     instructions: 'Be helpful.',
+    instructionsPath: '/catalog/packs/pack/agents/reviewer/instructions.md',
     ...overrides,
   };
 }

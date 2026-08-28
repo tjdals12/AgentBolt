@@ -153,6 +153,7 @@ program
   .requiredOption('--pack <name>', 'Pack name the item belongs to (required)')
   .requiredOption('--item <name>', 'Item name to show (required)')
   .option('--no-pager', 'Print directly without the pager')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -160,19 +161,36 @@ program
       $ agent-bolt show-item --source=common --pack=git-workflow --item=create-commit
     `,
   )
-  .action(async (options: { source: string; pack: string; item: string; pager: boolean }) => {
-    const projectPath = process.cwd();
-    try {
-      const { ShowItemCommand } = await import('#catalog/commands/show-item.js');
-      const command = new ShowItemCommand(options);
-      const result = command.execute(projectPath);
-      withPager(() => renderShowItemResult(result), options.pager);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
-    }
-  });
+  .action(
+    async (options: {
+      source: string;
+      pack: string;
+      item: string;
+      pager: boolean;
+      json: boolean;
+    }) => {
+      const projectPath = process.cwd();
+      try {
+        const { ShowItemCommand } = await import('#catalog/commands/show-item.js');
+        const command = new ShowItemCommand(options);
+        const result = command.execute(projectPath);
+        if (options.json) {
+          printJson(command.toJson(result));
+        } else {
+          withPager(() => renderShowItemResult(result), options.pager);
+        }
+      } catch (e) {
+        if (options.json) {
+          printJsonError(e);
+          process.exitCode = 1;
+          return;
+        }
+        const message = e instanceof Error ? e.message : String(e);
+        ConsoleOutput.error(message);
+        process.exit(1);
+      }
+    },
+  );
 
 program
   .command('add-pack')
