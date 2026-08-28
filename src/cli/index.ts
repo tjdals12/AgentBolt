@@ -237,6 +237,7 @@ program
   .description('Remove whole packs from a source in the config')
   .option('--source <alias>', 'Target source to remove the packs from. Omit to pick interactively')
   .option('--packs <list>', 'Pack names to remove (comma separated). Omit to pick interactively')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -247,14 +248,23 @@ program
       $ agent-bolt remove-pack --source=common --packs=git-workflow,code-review
     `,
   )
-  .action(async (options: { source?: string; packs?: string }) => {
+  .action(async (options: { source?: string; packs?: string; json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { RemovePackCommand } = await import('#catalog/commands/remove-pack.js');
       const command = new RemovePackCommand(options);
       const result = await command.execute(projectPath);
-      renderRemovePackResult(result);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderRemovePackResult(result);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);

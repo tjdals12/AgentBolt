@@ -27,13 +27,21 @@ export type RemovePackResult = RemovedSourceResult[];
 export class RemovePackCommand {
   private readonly _source?: string;
   private readonly _packs?: string;
+  private readonly _json: boolean;
 
-  constructor(options: { source?: string; packs?: string }) {
+  constructor(options: { source?: string; packs?: string; json: boolean }) {
     this._source = options.source;
     this._packs = options.packs;
+    this._json = options.json;
   }
 
   async execute(projectPath: string): Promise<RemovePackResult> {
+    if (this._json && (this._source === undefined || this._packs === undefined)) {
+      throw new Error(
+        `--source and --packs are required with --json. e.g. --source=common --packs=git-workflow`,
+      );
+    }
+
     if (this._source !== undefined) {
       const result = await this.removePacksFromSource(projectPath, this._source);
       return [result];
@@ -74,6 +82,17 @@ export class RemovePackCommand {
 
     const results = [...bySource.values()];
     return results;
+  }
+
+  toJson(result: RemovePackResult) {
+    return {
+      results: result.map(({ sourceAlias, removedPacks, skippedPackNames }) => ({
+        source: sourceAlias,
+        removed: removedPacks,
+        skipped: skippedPackNames,
+      })),
+      failures: [],
+    };
   }
 
   private async removePacksFromSource(
