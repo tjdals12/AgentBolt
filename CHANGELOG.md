@@ -1,3 +1,9 @@
+# [1.4.0-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.3.0...v1.4.0-next.1) (2026-08-28)
+
+### Features
+
+- add --json output to all commands ([#9](https://github.com/tjdals12/AgentBolt/issues/9)) ([7b9b396](https://github.com/tjdals12/AgentBolt/commit/7b9b3962e0d0b0702cd8c7f407adb88ee8857d19))
+
 # [1.3.0](https://github.com/tjdals12/AgentBolt/compare/v1.2.0...v1.3.0) (2026-07-16)
 
 ### Bug Fixes
