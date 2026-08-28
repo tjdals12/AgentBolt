@@ -57,24 +57,13 @@ program
   )
   .action(async (options: { tools?: string; source: string[]; force: boolean; json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { InitCommand } = await import('#catalog/commands/init.js');
-      const command = new InitCommand(options);
-      const result = await command.execute(projectPath);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        renderInitResult(result, projectPath);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { InitCommand } = await import('#catalog/commands/init.js');
+    const command = new InitCommand(options);
+    const result = await command.execute(projectPath);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderInitResult(result, projectPath);
     }
   });
 
@@ -94,25 +83,14 @@ program
   )
   .action(async (options: { source?: string; pager: boolean; json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { ListPacksCommand } = await import('#catalog/commands/list-packs.js');
-      const reporter = ProgressReporter.create({ silent: options.json });
-      const command = new ListPacksCommand(options);
-      const result = command.execute(projectPath, reporter);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        withPager(() => renderListPacksResult(result), options.pager);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { ListPacksCommand } = await import('#catalog/commands/list-packs.js');
+    const reporter = ProgressReporter.create({ silent: options.json });
+    const command = new ListPacksCommand(options);
+    const result = command.execute(projectPath, reporter);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      withPager(() => renderListPacksResult(result), options.pager);
     }
   });
 
@@ -135,24 +113,13 @@ program
   )
   .action(async (options: { source?: string; packs?: string; pager: boolean; json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { ListItemsCommand } = await import('#catalog/commands/list-items.js');
-      const command = new ListItemsCommand(options);
-      const result = command.execute(projectPath);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        withPager(() => renderListItemsResult(result), options.pager);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { ListItemsCommand } = await import('#catalog/commands/list-items.js');
+    const command = new ListItemsCommand(options);
+    const result = command.execute(projectPath);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      withPager(() => renderListItemsResult(result), options.pager);
     }
   });
 
@@ -180,24 +147,13 @@ program
       json: boolean;
     }) => {
       const projectPath = process.cwd();
-      try {
-        const { ShowItemCommand } = await import('#catalog/commands/show-item.js');
-        const command = new ShowItemCommand(options);
-        const result = command.execute(projectPath);
-        if (options.json) {
-          printJson(command.toJson(result));
-        } else {
-          withPager(() => renderShowItemResult(result), options.pager);
-        }
-      } catch (e) {
-        if (options.json) {
-          printJsonError(e);
-          process.exitCode = 1;
-          return;
-        }
-        const message = e instanceof Error ? e.message : String(e);
-        ConsoleOutput.error(message);
-        process.exit(1);
+      const { ShowItemCommand } = await import('#catalog/commands/show-item.js');
+      const command = new ShowItemCommand(options);
+      const result = command.execute(projectPath);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        withPager(() => renderShowItemResult(result), options.pager);
       }
     },
   );
@@ -220,25 +176,14 @@ program
   )
   .action(async (options: { source?: string; packs?: string; json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { AddPackCommand } = await import('#catalog/commands/add-pack.js');
-      const reporter = ProgressReporter.create({ silent: options.json });
-      const command = new AddPackCommand(options);
-      const result = await command.execute(projectPath, reporter);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        renderAddPackResult(result);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { AddPackCommand } = await import('#catalog/commands/add-pack.js');
+    const reporter = ProgressReporter.create({ silent: options.json });
+    const command = new AddPackCommand(options);
+    const result = await command.execute(projectPath, reporter);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderAddPackResult(result);
     }
   });
 
@@ -260,24 +205,13 @@ program
   )
   .action(async (options: { source?: string; packs?: string; json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { RemovePackCommand } = await import('#catalog/commands/remove-pack.js');
-      const command = new RemovePackCommand(options);
-      const result = await command.execute(projectPath);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        renderRemovePackResult(result);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { RemovePackCommand } = await import('#catalog/commands/remove-pack.js');
+    const command = new RemovePackCommand(options);
+    const result = await command.execute(projectPath);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderRemovePackResult(result);
     }
   });
 
@@ -311,25 +245,14 @@ program
       json: boolean;
     }) => {
       const projectPath = process.cwd();
-      try {
-        const { AddItemCommand } = await import('#catalog/commands/add-item.js');
-        const reporter = ProgressReporter.create({ silent: options.json });
-        const command = new AddItemCommand(options);
-        const result = await command.execute(projectPath, reporter);
-        if (options.json) {
-          printJson(command.toJson(result));
-        } else {
-          renderAddItemResult(result);
-        }
-      } catch (e) {
-        if (options.json) {
-          printJsonError(e);
-          process.exitCode = 1;
-          return;
-        }
-        const message = e instanceof Error ? e.message : String(e);
-        ConsoleOutput.error(message);
-        process.exit(1);
+      const { AddItemCommand } = await import('#catalog/commands/add-item.js');
+      const reporter = ProgressReporter.create({ silent: options.json });
+      const command = new AddItemCommand(options);
+      const result = await command.execute(projectPath, reporter);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderAddItemResult(result);
       }
     },
   );
@@ -366,24 +289,13 @@ program
       json: boolean;
     }) => {
       const projectPath = process.cwd();
-      try {
-        const { RemoveItemCommand } = await import('#catalog/commands/remove-item.js');
-        const command = new RemoveItemCommand(options);
-        const result = await command.execute(projectPath);
-        if (options.json) {
-          printJson(command.toJson(result));
-        } else {
-          renderRemoveItemResult(result);
-        }
-      } catch (e) {
-        if (options.json) {
-          printJsonError(e);
-          process.exitCode = 1;
-          return;
-        }
-        const message = e instanceof Error ? e.message : String(e);
-        ConsoleOutput.error(message);
-        process.exit(1);
+      const { RemoveItemCommand } = await import('#catalog/commands/remove-item.js');
+      const command = new RemoveItemCommand(options);
+      const result = await command.execute(projectPath);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderRemoveItemResult(result);
       }
     },
   );
@@ -401,24 +313,13 @@ program
   )
   .action(async (option: { json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { SyncCommand } = await import('#catalog/commands/sync.js');
-      const command = new SyncCommand();
-      const result = command.execute(projectPath);
-      if (option.json) {
-        printJson(command.toJson(result));
-      } else {
-        renderSyncResult(result);
-      }
-    } catch (e) {
-      if (option.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { SyncCommand } = await import('#catalog/commands/sync.js');
+    const command = new SyncCommand();
+    const result = command.execute(projectPath);
+    if (option.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderSyncResult(result);
     }
   });
 
@@ -435,27 +336,16 @@ program
   )
   .action(async (options: { json: boolean }) => {
     const projectPath = process.cwd();
-    try {
-      const { CheckCommand } = await import('#catalog/commands/check.js');
-      const command = new CheckCommand();
-      const { checkResult, drifted } = command.execute(projectPath);
-      if (options.json) {
-        printJson(command.toJson({ checkResult, drifted }));
-      } else {
-        renderCheckResult(checkResult);
-      }
-      if (drifted) {
-        process.exitCode = 1;
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { CheckCommand } = await import('#catalog/commands/check.js');
+    const command = new CheckCommand();
+    const { checkResult, drifted } = command.execute(projectPath);
+    if (options.json) {
+      printJson(command.toJson({ checkResult, drifted }));
+    } else {
+      renderCheckResult(checkResult);
+    }
+    if (drifted) {
+      process.exitCode = 1;
     }
   });
 
@@ -480,28 +370,17 @@ catalog
     const { dir } = options;
     const projectPath = process.cwd();
     const catalogDirPath = dir ? path.resolve(projectPath, dir) : projectPath;
-    try {
-      const { ValidateCatalogCommand } =
-        await import('#catalog/commands/catalog/validate-catalog.js');
-      const command = new ValidateCatalogCommand();
-      const { validateCatalogResult, invalid } = command.execute(catalogDirPath);
-      if (options.json) {
-        printJson(command.toJson({ validateCatalogResult, invalid }));
-      } else {
-        renderValidateCatalogResult(validateCatalogResult);
-      }
-      if (invalid) {
-        process.exitCode = 1;
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { ValidateCatalogCommand } =
+      await import('#catalog/commands/catalog/validate-catalog.js');
+    const command = new ValidateCatalogCommand();
+    const { validateCatalogResult, invalid } = command.execute(catalogDirPath);
+    if (options.json) {
+      printJson(command.toJson({ validateCatalogResult, invalid }));
+    } else {
+      renderValidateCatalogResult(validateCatalogResult);
+    }
+    if (invalid) {
+      process.exitCode = 1;
     }
   });
 
@@ -524,24 +403,13 @@ catalog
     const { dir, name, description } = options;
     const projectPath = process.cwd();
     const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-    try {
-      const { InitCatalogCommand } = await import('#catalog/commands/catalog/init-catalog.js');
-      const command = new InitCatalogCommand({ name, description });
-      const result = command.execute(catalogDir);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        renderInitCatalogResult(result, projectPath);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { InitCatalogCommand } = await import('#catalog/commands/catalog/init-catalog.js');
+    const command = new InitCatalogCommand({ name, description });
+    const result = command.execute(catalogDir);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderInitCatalogResult(result, projectPath);
     }
   });
 
@@ -564,27 +432,16 @@ catalog
     const { dir, description } = options;
     const projectPath = process.cwd();
     const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-    try {
-      const { NewPackCommand } = await import('#catalog/commands/catalog/new-pack.js');
-      const command = new NewPackCommand({
-        name,
-        description,
-      });
-      const result = command.execute(catalogDir);
-      if (options.json) {
-        printJson(command.toJson(result));
-      } else {
-        renderNewPackResult(result, projectPath);
-      }
-    } catch (e) {
-      if (options.json) {
-        printJsonError(e);
-        process.exitCode = 1;
-        return;
-      }
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
+    const { NewPackCommand } = await import('#catalog/commands/catalog/new-pack.js');
+    const command = new NewPackCommand({
+      name,
+      description,
+    });
+    const result = command.execute(catalogDir);
+    if (options.json) {
+      printJson(command.toJson(result));
+    } else {
+      renderNewPackResult(result, projectPath);
     }
   });
 
@@ -615,28 +472,17 @@ catalog
       const { pack, dir, description } = options;
       const projectPath = process.cwd();
       const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-      try {
-        const { NewSkillCommand } = await import('#catalog/commands/catalog/new/new-skill.js');
-        const command = new NewSkillCommand({
-          pack,
-          name,
-          description,
-        });
-        const result = command.execute(catalogDir);
-        if (options.json) {
-          printJson(command.toJson(result));
-        } else {
-          renderNewSkillResult(result, projectPath);
-        }
-      } catch (e) {
-        if (options.json) {
-          printJsonError(e);
-          process.exitCode = 1;
-          return;
-        }
-        const message = e instanceof Error ? e.message : String(e);
-        ConsoleOutput.error(message);
-        process.exit(1);
+      const { NewSkillCommand } = await import('#catalog/commands/catalog/new/new-skill.js');
+      const command = new NewSkillCommand({
+        pack,
+        name,
+        description,
+      });
+      const result = command.execute(catalogDir);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderNewSkillResult(result, projectPath);
       }
     },
   );
@@ -667,24 +513,13 @@ catalog
       const { pack, dir, description } = options;
       const projectPath = process.cwd();
       const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-      try {
-        const { NewAgentCommand } = await import('#catalog/commands/catalog/new/new-agent.js');
-        const command = new NewAgentCommand({ pack, name, description });
-        const result = command.execute(catalogDir);
-        if (options.json) {
-          printJson(command.toJson(result));
-        } else {
-          renderNewAgentResult(result, projectPath);
-        }
-      } catch (e) {
-        if (options.json) {
-          printJsonError(e);
-          process.exitCode = 1;
-          return;
-        }
-        const message = e instanceof Error ? e.message : String(e);
-        ConsoleOutput.error(message);
-        process.exit(1);
+      const { NewAgentCommand } = await import('#catalog/commands/catalog/new/new-agent.js');
+      const command = new NewAgentCommand({ pack, name, description });
+      const result = command.execute(catalogDir);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderNewAgentResult(result, projectPath);
       }
     },
   );
@@ -715,27 +550,31 @@ catalog
       const { pack, dir, description } = options;
       const projectPath = process.cwd();
       const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-      try {
-        const { NewGuidelineCommand } =
-          await import('#catalog/commands/catalog/new/new-guideline.js');
-        const command = new NewGuidelineCommand({ pack, name, description });
-        const result = command.execute(catalogDir);
-        if (options.json) {
-          printJson(command.toJson(result));
-        } else {
-          renderNewGuidelineResult(result, projectPath);
-        }
-      } catch (e) {
-        if (options.json) {
-          printJsonError(e);
-          process.exitCode = 1;
-          return;
-        }
-        const message = e instanceof Error ? e.message : String(e);
-        ConsoleOutput.error(message);
-        process.exit(1);
+      const { NewGuidelineCommand } =
+        await import('#catalog/commands/catalog/new/new-guideline.js');
+      const command = new NewGuidelineCommand({ pack, name, description });
+      const result = command.execute(catalogDir);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderNewGuidelineResult(result, projectPath);
       }
     },
   );
 
-program.parse();
+let jsonMode = false;
+program.hook('preAction', (_thisCommand, actionCommand) => {
+  jsonMode = actionCommand.opts<{ json?: boolean }>().json ?? false;
+});
+
+try {
+  await program.parseAsync();
+} catch (e) {
+  if (jsonMode) {
+    printJsonError(e);
+  } else {
+    const message = e instanceof Error ? e.message : String(e);
+    ConsoleOutput.error(message);
+  }
+  process.exitCode = 1;
+}
