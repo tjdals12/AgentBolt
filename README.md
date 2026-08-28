@@ -507,6 +507,7 @@ agent-bolt init [options]
 | `--tools <list>`  | Agents to install items into. Comma-separated (e.g. `claude,codex,cursor,copilot,opencode`) | Optional | Interactive prompt |
 | `--source <spec>` | Catalog to pull items from. `<alias>=<type>:<location>` (e.g. `dev=local:./catalog`)        | Optional | Interactive prompt |
 | `--force`         | Overwrite an existing config file                                                           | Optional | —                  |
+| `--json`          | Print the result as JSON                                                                    | Optional | —                  |
 
 ### `agent-bolt list-packs`
 
@@ -516,9 +517,10 @@ Lists the packages a catalog offers.
 agent-bolt list-packs [options]
 ```
 
-| Option             | Description     | Required | Default      |
-| ------------------ | --------------- | -------- | ------------ |
-| `--source <alias>` | Catalog to list | Optional | All catalogs |
+| Option             | Description              | Required | Default      |
+| ------------------ | ------------------------ | -------- | ------------ |
+| `--source <alias>` | Catalog to list          | Optional | All catalogs |
+| `--json`           | Print the result as JSON | Optional | —            |
 
 ### `agent-bolt list-items`
 
@@ -532,6 +534,7 @@ agent-bolt list-items [options]
 | ------------------ | --------------------------------- | -------- | ------------ |
 | `--source <alias>` | Catalog to list                   | Optional | All catalogs |
 | `--packs <list>`   | Packages to list. Comma-separated | Optional | All packages |
+| `--json`           | Print the result as JSON          | Optional | —            |
 
 ### `agent-bolt show-item`
 
@@ -546,6 +549,7 @@ agent-bolt show-item --source <alias> --pack <name> --item <name> [options]
 | `--source <alias>` | Catalog the item belongs to | Required | —       |
 | `--pack <name>`    | Package the item belongs to | Required | —       |
 | `--item <name>`    | Name of the item to show    | Required | —       |
+| `--json`           | Print the result as JSON    | Optional | —       |
 
 ### `agent-bolt add-pack`
 
@@ -559,6 +563,7 @@ agent-bolt add-pack [--source <alias>] [--packs <list>]
 | ------------------ | ----------------------------------------- | -------- | ------------------ |
 | `--source <alias>` | Target catalog                            | Optional | Interactive prompt |
 | `--packs <list>`   | Names of packages to add. Comma-separated | Optional | Interactive prompt |
+| `--json`           | Print the result as JSON                  | Optional | —                  |
 
 Omitting `--packs` picks packages interactively; omitting `--source` as well picks the catalog first and then loops over sources. `--packs` requires `--source`.
 
@@ -577,6 +582,7 @@ agent-bolt add-item [--source <alias>] [--pack <name>] [options]
 | `--skills <list>`     | Names of skills to add. Comma-separated     | Optional | —                  |
 | `--agents <list>`     | Names of subagents to add. Comma-separated  | Optional | —                  |
 | `--guidelines <list>` | Names of guidelines to add. Comma-separated | Optional | —                  |
+| `--json`              | Print the result as JSON                    | Optional | —                  |
 
 Omitting the item options picks items interactively; omitting `--pack` too picks a pack first; omitting `--source` as well loops over sources. `--pack` requires `--source`, and the item options require `--pack`.
 
@@ -592,6 +598,7 @@ agent-bolt remove-pack [--source <alias>] [--packs <list>]
 | ------------------ | -------------------------------------------- | -------- | ------------------ |
 | `--source <alias>` | Target catalog                               | Optional | Interactive prompt |
 | `--packs <list>`   | Names of packages to remove. Comma-separated | Optional | Interactive prompt |
+| `--json`           | Print the result as JSON                     | Optional | —                  |
 
 Omitting `--packs` picks packages interactively; omitting `--source` as well picks the catalog first and then loops over sources. `--packs` requires `--source`.
 
@@ -610,6 +617,7 @@ agent-bolt remove-item [--source <alias>] [--pack <name>] [options]
 | `--skills <list>`     | Names of skills to remove. Comma-separated     | Optional | —                  |
 | `--agents <list>`     | Names of subagents to remove. Comma-separated  | Optional | —                  |
 | `--guidelines <list>` | Names of guidelines to remove. Comma-separated | Optional | —                  |
+| `--json`              | Print the result as JSON                       | Optional | —                  |
 
 Omitting the item options picks items interactively; omitting `--pack` too picks a pack first; omitting `--source` as well loops over sources. `--pack` requires `--source`, and the item options require `--pack`.
 
@@ -618,16 +626,24 @@ Omitting the item options picks items interactively; omitting `--pack` too picks
 Installs the items in your config into each agent.
 
 ```text
-agent-bolt sync
+agent-bolt sync [options]
 ```
+
+| Option   | Description              | Required | Default |
+| -------- | ------------------------ | -------- | ------- |
+| `--json` | Print the result as JSON | Optional | —       |
 
 ### `agent-bolt check`
 
 Checks whether what's installed has drifted from your config file. Exits with code 1 if it has.
 
 ```text
-agent-bolt check
+agent-bolt check [options]
 ```
+
+| Option   | Description              | Required | Default |
+| -------- | ------------------------ | -------- | ------- |
+| `--json` | Print the result as JSON | Optional | —       |
 
 The following `catalog` commands are for authoring catalogs.
 
@@ -639,11 +655,12 @@ Creates the manifest (`catalog.json`) and the package scaffold (`packs/`).
 agent-bolt catalog init [options]
 ```
 
-| Option                 | Description         | Required | Default           |
-| ---------------------- | ------------------- | -------- | ----------------- |
-| `--dir <dir>`          | Catalog directory   | Optional | Current directory |
-| `--name <name>`        | Catalog name        | Optional | Directory name    |
-| `--description <text>` | Catalog description | Optional | `"TODO: ..."`     |
+| Option                 | Description              | Required | Default           |
+| ---------------------- | ------------------------ | -------- | ----------------- |
+| `--dir <dir>`          | Catalog directory        | Optional | Current directory |
+| `--name <name>`        | Catalog name             | Optional | Directory name    |
+| `--description <text>` | Catalog description      | Optional | `"TODO: ..."`     |
+| `--json`               | Print the result as JSON | Optional | —                 |
 
 ### `agent-bolt catalog new-pack`
 
@@ -653,10 +670,11 @@ Creates the manifest (`pack.json`) and the package scaffold (`<pack-name>/`).
 agent-bolt catalog new-pack <name> [options]
 ```
 
-| Option                 | Description         | Required | Default           |
-| ---------------------- | ------------------- | -------- | ----------------- |
-| `--dir <dir>`          | Catalog directory   | Optional | Current directory |
-| `--description <text>` | Package description | Optional | `"TODO: ..."`     |
+| Option                 | Description              | Required | Default           |
+| ---------------------- | ------------------------ | -------- | ----------------- |
+| `--dir <dir>`          | Catalog directory        | Optional | Current directory |
+| `--description <text>` | Package description      | Optional | `"TODO: ..."`     |
+| `--json`               | Print the result as JSON | Optional | —                 |
 
 ### `agent-bolt catalog new-skill · new-agent · new-guideline`
 
@@ -673,6 +691,7 @@ agent-bolt catalog new-guideline <name> --pack <name> [options]
 | `--pack <name>`        | Package the item belongs to | Required | —                 |
 | `--dir <dir>`          | Catalog directory           | Optional | Current directory |
 | `--description <text>` | Item description            | Optional | `"TODO: ..."`     |
+| `--json`               | Print the result as JSON    | Optional | —                 |
 
 ### `agent-bolt catalog validate`
 
@@ -682,9 +701,10 @@ Checks the catalog's structure, manifests, and integrity. Exits with code 1 if i
 agent-bolt catalog validate [options]
 ```
 
-| Option        | Description       | Required | Default           |
-| ------------- | ----------------- | -------- | ----------------- |
-| `--dir <dir>` | Catalog directory | Optional | Current directory |
+| Option        | Description              | Required | Default           |
+| ------------- | ------------------------ | -------- | ----------------- |
+| `--dir <dir>` | Catalog directory        | Optional | Current directory |
+| `--json`      | Print the result as JSON | Optional | —                 |
 
 ## License
 
