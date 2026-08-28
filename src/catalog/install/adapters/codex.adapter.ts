@@ -25,6 +25,7 @@ export class CodexAdapter extends Adapter {
     const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       skillName,
       dir,
@@ -56,6 +57,7 @@ export class CodexAdapter extends Adapter {
     const filePath = path.join(this.agentsDir, `${installName}.toml`);
 
     return {
+      sourceAlias,
       packName,
       agentName,
       filePath,
@@ -87,6 +89,7 @@ export class CodexAdapter extends Adapter {
 
     return {
       kind: 'block-fragment',
+      sourceAlias,
       packName,
       guidelineName,
       fragment,

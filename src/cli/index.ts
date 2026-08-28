@@ -339,6 +339,7 @@ program
 program
   .command('sync')
   .description('Install configured tools into each selected tool')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -346,14 +347,23 @@ program
       $ agent-bolt sync
     `,
   )
-  .action(async () => {
+  .action(async (option: { json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { SyncCommand } = await import('#catalog/commands/sync.js');
       const command = new SyncCommand();
       const result = command.execute(projectPath);
-      renderSyncResult(result);
+      if (option.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderSyncResult(result);
+      }
     } catch (e) {
+      if (option.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);

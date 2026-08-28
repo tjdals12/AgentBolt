@@ -24,6 +24,7 @@ export class OpenCodeAdapter extends Adapter {
     const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       skillName,
       dir,
@@ -44,6 +45,7 @@ export class OpenCodeAdapter extends Adapter {
     const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       agentName,
       filePath,
@@ -75,6 +77,7 @@ export class OpenCodeAdapter extends Adapter {
 
     return {
       kind: 'block-fragment',
+      sourceAlias,
       packName,
       guidelineName,
       fragment,

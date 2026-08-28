@@ -37,7 +37,8 @@ export class CheckCommand {
       tools: checkResult.map(({ tool, counts, changes }) => ({
         tool,
         counts,
-        changes: changes.map(({ label, status }) => ({
+        changes: changes.map(({ source, label, status }) => ({
+          source,
           label,
           status:
             status === 'installed' ? 'missing' : status === 'updated' ? 'drifted' : 'orphaned',
