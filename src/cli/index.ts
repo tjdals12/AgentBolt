@@ -197,6 +197,7 @@ program
   .description('Add whole packs from a source to the config (all items included)')
   .option('--source <alias>', 'Target source to add the packs to. Omit to pick interactively')
   .option('--packs <list>', 'Pack names to add (comma separated). Omit to pick interactively')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -207,15 +208,24 @@ program
       $ agent-bolt add-pack --source=common --packs=git-workflow,code-review
     `,
   )
-  .action(async (options: { source?: string; packs?: string }) => {
+  .action(async (options: { source?: string; packs?: string; json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { AddPackCommand } = await import('#catalog/commands/add-pack.js');
-      const reporter = ProgressReporter.create();
+      const reporter = ProgressReporter.create({ silent: options.json });
       const command = new AddPackCommand(options);
       const result = await command.execute(projectPath, reporter);
-      renderAddPackResult(result);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderAddPackResult(result);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);

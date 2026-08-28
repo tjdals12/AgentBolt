@@ -34,13 +34,21 @@ export type AddPackResult = {
 export class AddPackCommand {
   private readonly _source?: string;
   private readonly _packs?: string;
+  private readonly _json: boolean;
 
-  constructor(options: { source?: string; packs?: string }) {
+  constructor(options: { source?: string; packs?: string; json: boolean }) {
     this._source = options.source;
     this._packs = options.packs;
+    this._json = options.json;
   }
 
   async execute(projectPath: string, reporter: ProgressReporter): Promise<AddPackResult> {
+    if (this._json && (this._source === undefined || this._packs === undefined)) {
+      throw new Error(
+        `--source and --packs are required with --json. e.g. --source=common --packs=git-workflow`,
+      );
+    }
+
     if (this._source !== undefined) {
       const { result } = await this.addPacksFromSource(projectPath, this._source, reporter);
       return { results: [result], failures: [] };
@@ -98,6 +106,18 @@ export class AddPackCommand {
 
     const results = [...bySource.values()];
     return { results, failures };
+  }
+
+  toJson(result: AddPackResult) {
+    const { results, failures } = result;
+    return {
+      results: results.map(({ sourceAlias, addedPacks, skippedPackNames }) => ({
+        source: sourceAlias,
+        added: addedPacks,
+        skipped: skippedPackNames,
+      })),
+      failures,
+    };
   }
 
   private resolveCatalogDetail(
