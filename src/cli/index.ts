@@ -363,6 +363,7 @@ program
 program
   .command('check')
   .description('Check whether installed tools have drifted from the config')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -370,17 +371,26 @@ program
       $ agent-bolt check
     `,
   )
-  .action(async () => {
+  .action(async (options: { json: boolean }) => {
     const projectPath = process.cwd();
     try {
       const { CheckCommand } = await import('#catalog/commands/check.js');
       const command = new CheckCommand();
       const { checkResult, drifted } = command.execute(projectPath);
-      renderCheckResult(checkResult);
+      if (options.json) {
+        printJson(command.toJson({ checkResult, drifted }));
+      } else {
+        renderCheckResult(checkResult);
+      }
       if (drifted) {
         process.exitCode = 1;
       }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);
