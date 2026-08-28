@@ -511,6 +511,7 @@ catalog
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--name <name>', 'Catalog name (default: target directory name)')
   .option('--description <text>', 'Catalog description (default: a TODO placeholder)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -519,7 +520,7 @@ catalog
       $ agent-bolt catalog init --dir=./my-catalog --name=acme-catalog
     `,
   )
-  .action(async (options: { dir?: string; name?: string; description?: string }) => {
+  .action(async (options: { dir?: string; name?: string; description?: string; json: boolean }) => {
     const { dir, name, description } = options;
     const projectPath = process.cwd();
     const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
@@ -527,8 +528,17 @@ catalog
       const { InitCatalogCommand } = await import('#catalog/commands/catalog/init-catalog.js');
       const command = new InitCatalogCommand({ name, description });
       const result = command.execute(catalogDir);
-      renderInitCatalogResult(result, projectPath);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderInitCatalogResult(result, projectPath);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);
@@ -540,6 +550,7 @@ catalog
   .description('Create a new pack skeleton (packs/<name>/pack.json)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Pack description (default: a TODO placeholder)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -549,7 +560,7 @@ catalog
       $ agent-bolt catalog new-pack git-workflow --description="Commit and PR helpers"
     `,
   )
-  .action(async (name: string, options: { dir?: string; description?: string }) => {
+  .action(async (name: string, options: { dir?: string; description?: string; json: boolean }) => {
     const { dir, description } = options;
     const projectPath = process.cwd();
     const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
@@ -560,8 +571,17 @@ catalog
         description,
       });
       const result = command.execute(catalogDir);
-      renderNewPackResult(result, projectPath);
+      if (options.json) {
+        printJson(command.toJson(result));
+      } else {
+        renderNewPackResult(result, projectPath);
+      }
     } catch (e) {
+      if (options.json) {
+        printJsonError(e);
+        process.exitCode = 1;
+        return;
+      }
       const message = e instanceof Error ? e.message : String(e);
       ConsoleOutput.error(message);
       process.exit(1);
@@ -574,6 +594,7 @@ catalog
   .requiredOption('--pack <name>', 'Parent pack the skill belongs to (required)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Skill description (default: a TODO placeholder)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -586,25 +607,39 @@ catalog
       $ agent-bolt catalog new-skill create-commit --pack=git-workflow --description="Create commit" --dir=./my-catalog
     `,
   )
-  .action(async (name: string, options: { pack: string; dir?: string; description?: string }) => {
-    const { pack, dir, description } = options;
-    const projectPath = process.cwd();
-    const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-    try {
-      const { NewSkillCommand } = await import('#catalog/commands/catalog/new/new-skill.js');
-      const command = new NewSkillCommand({
-        pack,
-        name,
-        description,
-      });
-      const result = command.execute(catalogDir);
-      renderNewSkillResult(result, projectPath);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
-    }
-  });
+  .action(
+    async (
+      name: string,
+      options: { pack: string; dir?: string; description?: string; json: boolean },
+    ) => {
+      const { pack, dir, description } = options;
+      const projectPath = process.cwd();
+      const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
+      try {
+        const { NewSkillCommand } = await import('#catalog/commands/catalog/new/new-skill.js');
+        const command = new NewSkillCommand({
+          pack,
+          name,
+          description,
+        });
+        const result = command.execute(catalogDir);
+        if (options.json) {
+          printJson(command.toJson(result));
+        } else {
+          renderNewSkillResult(result, projectPath);
+        }
+      } catch (e) {
+        if (options.json) {
+          printJsonError(e);
+          process.exitCode = 1;
+          return;
+        }
+        const message = e instanceof Error ? e.message : String(e);
+        ConsoleOutput.error(message);
+        process.exit(1);
+      }
+    },
+  );
 
 catalog
   .command('new-agent <name>')
@@ -612,6 +647,7 @@ catalog
   .requiredOption('--pack <name>', 'Parent pack the agent belongs to (required)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Agent description (default: a TODO placeholder)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -623,21 +659,35 @@ catalog
       $ agent-bolt catalog new-agent code-reviewer --pack=git-workflow --dir=./my-catalog
     `,
   )
-  .action(async (name: string, options: { pack: string; dir?: string; description?: string }) => {
-    const { pack, dir, description } = options;
-    const projectPath = process.cwd();
-    const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-    try {
-      const { NewAgentCommand } = await import('#catalog/commands/catalog/new/new-agent.js');
-      const command = new NewAgentCommand({ pack, name, description });
-      const result = command.execute(catalogDir);
-      renderNewAgentResult(result, projectPath);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
-    }
-  });
+  .action(
+    async (
+      name: string,
+      options: { pack: string; dir?: string; description?: string; json: boolean },
+    ) => {
+      const { pack, dir, description } = options;
+      const projectPath = process.cwd();
+      const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
+      try {
+        const { NewAgentCommand } = await import('#catalog/commands/catalog/new/new-agent.js');
+        const command = new NewAgentCommand({ pack, name, description });
+        const result = command.execute(catalogDir);
+        if (options.json) {
+          printJson(command.toJson(result));
+        } else {
+          renderNewAgentResult(result, projectPath);
+        }
+      } catch (e) {
+        if (options.json) {
+          printJsonError(e);
+          process.exitCode = 1;
+          return;
+        }
+        const message = e instanceof Error ? e.message : String(e);
+        ConsoleOutput.error(message);
+        process.exit(1);
+      }
+    },
+  );
 
 catalog
   .command('new-guideline <name>')
@@ -645,6 +695,7 @@ catalog
   .requiredOption('--pack <name>', 'Parent pack the guideline belongs to (required)')
   .option('--dir <dir>', 'Catalog directory (default: current directory)')
   .option('--description <text>', 'Guideline description (default: a TODO placeholder)')
+  .option('--json', 'Print the result as JSON', false)
   .addHelpText(
     'after',
     dedent`
@@ -656,21 +707,35 @@ catalog
       $ agent-bolt catalog new-guideline commit-rules --pack=git-workflow --dir=./my-catalog
     `,
   )
-  .action(async (name: string, options: { pack: string; dir?: string; description?: string }) => {
-    const { pack, dir, description } = options;
-    const projectPath = process.cwd();
-    const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
-    try {
-      const { NewGuidelineCommand } =
-        await import('#catalog/commands/catalog/new/new-guideline.js');
-      const command = new NewGuidelineCommand({ pack, name, description });
-      const result = command.execute(catalogDir);
-      renderNewGuidelineResult(result, projectPath);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      ConsoleOutput.error(message);
-      process.exit(1);
-    }
-  });
+  .action(
+    async (
+      name: string,
+      options: { pack: string; dir?: string; description?: string; json: boolean },
+    ) => {
+      const { pack, dir, description } = options;
+      const projectPath = process.cwd();
+      const catalogDir = dir ? path.resolve(projectPath, dir) : projectPath;
+      try {
+        const { NewGuidelineCommand } =
+          await import('#catalog/commands/catalog/new/new-guideline.js');
+        const command = new NewGuidelineCommand({ pack, name, description });
+        const result = command.execute(catalogDir);
+        if (options.json) {
+          printJson(command.toJson(result));
+        } else {
+          renderNewGuidelineResult(result, projectPath);
+        }
+      } catch (e) {
+        if (options.json) {
+          printJsonError(e);
+          process.exitCode = 1;
+          return;
+        }
+        const message = e instanceof Error ? e.message : String(e);
+        ConsoleOutput.error(message);
+        process.exit(1);
+      }
+    },
+  );
 
 program.parse();
