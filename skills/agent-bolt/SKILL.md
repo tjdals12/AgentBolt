@@ -34,7 +34,8 @@ Response shapes, exit codes, and command behavior:
 - The user wants agent-bolt in this project → **Set up agent-bolt**
 - The user has a catalog to hook up to an existing setup → **Add a catalog to an existing setup**
 - The user asks what a catalog offers, or what an item is → **Explore the catalog**
-- The user wants items installed, or asks what would fit → **Install items**
+- The user asks what would fit the project → **Recommend items for the project**
+- The user wants items installed → **Install items**
 - The user wants items gone → **Remove items**
 - The user asks whether installs are current, or CI failed on `check` → **Audit the installation**
 - A command failed because agent-bolt is missing → **When agent-bolt is not set up**
@@ -214,11 +215,31 @@ config is a hand edit.
    write into the config: `always`, or `conditional` with the globs it applies
    to.
 
-   Descriptions are how you narrow the field, not how you decide. Shortlist
-   the items worth a closer look and read each one in step 3.
+3. **Organize what you found and present it.** Group by pack, and give every
+   item the same labeled shape, filled from its description. Present all of
+   it — this flow filters nothing.
 
-3. **Read the body of every item you shortlist** — the response carries the
-   whole item, body included (trimmed here):
+   ```text
+   common — core development workflow shared across the team
+     create-commit · skill
+       summary:      generates Conventional Commits messages, stages
+                     changes when needed, and runs git commit
+       recommended:  you want every commit written in one consistent format
+     code-reviewer · agent
+       summary:      reviews written or modified code for correctness and
+                     quality, labeled by severity
+       recommended:  you want changes reviewed before they land
+     commit-rules · guideline · load: always
+       summary:      commit message format and commit granularity rules,
+                     kept in four lines
+       applies:      every agent's context, at all times
+   ```
+
+   Every kind renders in this shape; only the second label differs —
+   `recommended:` for skills and agents, `applies:` for guidelines.
+
+4. **Show an item the user asks about** — the response carries the whole
+   item, body included (trimmed here):
 
    ```bash
    agent-bolt show-item --source=common --pack=common --item=create-commit --json
@@ -244,33 +265,135 @@ config is a hand edit.
    }
    ```
 
-   `instructions` is what the item will install into the project, and it is
-   the only place its real behavior is written down. Check that it delivers
-   what its description promises — an item whose body does not match its
-   description is a poor fit whatever the description says — and that what it
-   does suits this project. `assets` are extra files the item ships with;
-   `toolConfig` is the per-tool settings it carries.
+   `instructions` is the exact content the item installs, and the only place
+   its real behavior is written down. `assets` are extra files the item ships
+   with; `toolConfig` is the per-tool settings it carries.
 
-4. **When the user asks what fits the project**, the judgment is yours, made
-   in this conversation: read the project itself — stack, structure,
-   conventions — and weigh it against the bodies you read in step 3. Present
-   what you'd pick, what in each body decided it, and let the user decide.
+## Recommend items for the project
+
+A recommendation is built from four inputs, gathered in order: the catalog
+map, the project, the bodies of the candidates, and the user's answers —
+descriptions narrow the field, bodies carry the verdict, questions cover
+what the code cannot say. The judgment is yours, made in this conversation;
+every final call is the user's.
+
+**Steps**
+
+1. **Map the catalog.** `agent-bolt list-packs --json` and
+   `agent-bolt list-items --json` across every source — the map is every
+   item the catalog offers.
+
+2. **Read the project.** Stack, structure, configuration, tooling. It
+   qualifies candidates for step 3, and it answers questions before step 4
+   needs to ask them.
+
+3. **First list — what fits now.** Pick the items the project as it stands
+   supports, read the body of each with `show-item`, and keep the ones whose
+   body delivers what the description promises and whose prerequisites the
+   project meets. Judge each kind by what installing it costs:
+
+   | Kind      | Installed, it…                         | So judge it…                                                                      |
+   | --------- | -------------------------------------- | --------------------------------------------------------------------------------- |
+   | guideline | is injected into every agent's context | strictly — one that prescribes what the project does not have is actively harmful |
+   | skill     | runs only when invoked                 | on quality and on whether its prerequisites exist                                 |
+   | subagent  | is a role, used when delegated to      | on whether the project needs that role's work                                     |
+
+4. **Second list — what the user plans.** Every item the map holds that
+   step 3 did not keep, and that the code has not already answered, goes
+   into a question: partition those items into areas and ask about them
+   all. An area is one kind of work — a technology, a workflow, a role
+   — so items serving the same work share one question, and items serving
+   different work get their own: two ORM skills are one question ("which
+   one, if any"), two role agents for different work are two. The question
+   itself carries the presentation — shape it like this:
+
+   ```text
+   Which of these role agents does the project need? (none is fine)
+
+     [ ] business-analyst
+         summary:      maps as-is business processes, elicits requirements,
+                       and finds process gaps
+         recommended:  requirements analysis will be delegated to an agent
+     [ ] ux-researcher
+         summary:      plans user research and turns findings into
+                       actionable insights
+         recommended:  user research happens in this project
+   ```
+
+   Items that do not fit one prompt go into the next, along the same work
+   boundaries. A yes sends those items through step 3's body check. When
+   the session cannot ask, or an asked question gets no answer, carry the
+   area into step 5 marked "needs confirmation" together with the question
+   that would settle it.
+
+5. **The record — what was not taken.** Every item on the map ends in a
+   kept list or here, and it arrives here only through step 4 — declined,
+   its `recommended:` line naming what would bring it back, or unanswered,
+   under the question that would settle it. Entries keep the labeled shape
+   of **Explore the catalog** step 3. Descriptions carry them; read a body
+   only when the user picks an item up.
+
+6. **Report and hand over.** Report every group — each entry with what
+   decided it — answering from the body where the user hesitates. An open
+   question from the record can be settled right there; the flow ends when
+   every item on the map is chosen, declined, or recorded with its
+   question. The chosen set goes through **Install items**. The shape of
+   the report:
+
+   ```text
+   Fits now — bodies read and verified
+     common/create-commit · skill
+       summary:  writes Conventional Commits messages from the diff
+       why:      the body assumes nothing beyond git, which the project has
+     common/commit-rules · guideline · load: always
+       summary:  four lines of commit format rules
+       why:      matches create-commit, and light enough to sit in every
+                 agent's context
+
+   Planned — confirmed in this conversation
+     backend/prisma-expert · skill
+       summary:  schema, migration, and query optimization playbook
+       why:      Prisma confirmed for this project
+
+   Declined — with what would bring each back
+     common/ux-researcher · agent
+       summary:      plans user research and turns findings into
+                     actionable insights
+       recommended:  user research happens in this project
+     frontend/react-dev · skill
+       summary:      React implementation patterns for components, state,
+                     and effects
+       recommended:  a React frontend is added
+
+   Needs confirmation — one answer settles each
+     will this repo push to a remote and use PRs?
+       create-pr · skill
+         summary:      opens pull requests with a standard body via gh
+         recommended:  a GitHub remote with a PR workflow is in place
+
+   Shall I install the "fits now" and "planned" lists? The open question
+   can be answered any time, and I can read any item's body for a closer
+   look.
+   ```
 
 **Guardrails**
 
-- Never recommend an item whose body you have not read. A description states
-  what an item is for; the body is what gets installed.
-- Read the bodies of the shortlist, not of the whole catalog. When a pack is
-  large, narrow it with the user first.
-- A guideline's body is installed into the project's rules or instructions
-  file as written, and every agent working in the project reads it from then
-  on. Say what a guideline imposes before recommending it.
+- Never claim an item fits before reading its body — and read the bodies
+  of candidates, not of the whole catalog.
+- Derive every question from items that exist. When no item hangs on the
+  answer, there is no question.
+- Prompt options follow the question shape of step 4; an item that does not
+  fit a prompt moves into the next one.
+- Questions and the report are the flow's only output.
+- Say what a guideline imposes before recommending it — its body lands in
+  the project's rules or instructions file as written.
 
 ## Install items
 
 **Steps**
 
-1. **Agree on the set with the user** — via **Explore the catalog**.
+1. **Agree on the set with the user** — via **Explore the catalog** or
+   **Recommend items for the project**.
 
 2. **Record the selection.** Whole packs:
 
