@@ -17,8 +17,6 @@ and long strings are elided with `…`. For options and flags, run
   the interactive picker.
 - Exit codes: `0` success; `1` any error; `check` also exits `1` when drift
   was found even though its JSON is a normal result object.
-- The `agent-bolt catalog` subcommands author catalogs and are not covered
-  here.
 
 ## init
 

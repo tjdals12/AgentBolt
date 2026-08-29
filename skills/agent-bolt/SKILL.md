@@ -15,8 +15,7 @@ Run every command from the project root, always in the same shape: `--json`
 plus every selection option spelled out.
 
 - For options, flags, and valid values, ask the CLI itself:
-  `agent-bolt <command> --help`. The commands below are working invocations,
-  not a catalog of every option.
+  `agent-bolt <command> --help`.
 - With `--json`, a command missing its selections refuses with an error naming
   exactly what is required. Without `--json` it opens an interactive picker
   meant for a human at a terminal — never rely on the picker.
@@ -61,8 +60,7 @@ Response shapes, exit codes, and command behavior:
    - **The starter catalog** — ready-made content to try agent-bolt with:
      `git:https://github.com/tjdals12/AgentBoltCatalog.git`.
    - **A new catalog** — authoring one is its own workflow, done with the
-     `agent-bolt catalog` commands and not covered here; offer it as a
-     separate task.
+     `agent-bolt catalog` commands; offer it as a separate task.
 
    **A local catalog path is stored and resolved relative to `.agent-bolt/`,
    not the project root**: a catalog directory at
@@ -260,8 +258,8 @@ config is a hand edit.
 
 **Guardrails**
 
-- Never recommend an item whose body you have not read. A description is a
-  claim about the item, not the item.
+- Never recommend an item whose body you have not read. A description states
+  what an item is for; the body is what gets installed.
 - Read the bodies of the shortlist, not of the whole catalog. When a pack is
   large, narrow it with the user first.
 - A guideline's body is installed into the project's rules or instructions
@@ -530,7 +528,7 @@ config is a hand edit.
    missing, rewrites the drifted, and deletes the orphaned. Before syncing
    over a `drifted` entry, tell the user the file was changed on disk and
    would be overwritten: if the change is worth keeping, it belongs in the
-   catalog (authoring work outside this skill), not in the installed copy.
+   catalog, not in the installed copy.
 
 **Guardrails**
 
