@@ -352,6 +352,38 @@ version: 1.4.0
   + .codex/skills/agent-bolt
 ```
 
+Once installed, you can ask your agent things like this in chat.
+
+#### Explore the catalog
+
+```text
+User: What packs and items are available in the connected catalog?
+Agent: I'll summarize the skills, agents, and guidelines in each pack.
+
+backend — assets for NestJS/Prisma backend development
+  nestjs-expert · skill
+  developer · agent
+  prisma-schema · guideline · load: conditional
+  …
+```
+
+#### Get recommendations for a project
+
+```text
+User: What items would fit this project?
+Agent: I'll inspect the project and catalog, then suggest candidates with the reasoning behind them.
+
+Recommended
+  backend/nestjs-expert · skill
+    Fits work on the NestJS application structure and implementation.
+  backend/prisma-expert · skill
+    Applies to this project's Prisma schema and data-access layer.
+  …
+
+User: Install the backend pack from those options.
+Agent: I've updated the configuration. May I run sync to install the files?
+```
+
 The skill lands as an `agent-bolt/` directory under each agent's skills directory. It is not tracked by `sync`/`check`, and re-running `skill install` overwrites it in place — run it again after upgrading AgentBolt to keep the skill in step with the CLI.
 
 ## Creating a catalog

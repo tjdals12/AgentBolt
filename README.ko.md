@@ -352,6 +352,38 @@ version: 1.4.0
   + .codex/skills/agent-bolt
 ```
 
+설치한 뒤 에이전트 채팅에서 이렇게 요청할 수 있습니다.
+
+#### 카탈로그 둘러보기
+
+```text
+사용자: 연결된 카탈로그에 어떤 팩과 아이템이 있나요?
+에이전트: 팩별 skill, agent, guideline을 요약해 보여드릴게요.
+
+backend — NestJS/Prisma 백엔드 개발용 자산
+  nestjs-expert · skill
+  developer · agent
+  prisma-schema · guideline · load: conditional
+  …
+```
+
+#### 프로젝트에 맞는 항목 추천받기
+
+```text
+사용자: 이 프로젝트에 맞는 항목을 추천해 주세요.
+에이전트: 프로젝트와 카탈로그를 함께 확인한 뒤, 근거와 함께 후보를 제안할게요.
+
+추천
+  backend/nestjs-expert · skill
+    NestJS 애플리케이션 구조와 구현을 다루는 데 적합합니다.
+  backend/prisma-expert · skill
+    이 프로젝트의 Prisma 스키마와 데이터 접근 계층에 적용할 수 있습니다.
+  …
+
+사용자: 그중 backend 팩을 설치해 주세요.
+에이전트: 설정을 변경했습니다. 실제 설치를 위해 sync를 실행해도 될까요?
+```
+
 스킬은 각 에이전트의 skills 디렉터리 아래 `agent-bolt/` 디렉터리로 설치됩니다. `sync`/`check`의 관리 대상이 아니며, `skill install`을 다시 실행하면 그 자리에서 덮어씁니다 — AgentBolt를 업그레이드한 뒤 다시 실행해서 스킬을 CLI와 맞추세요.
 
 ## 카탈로그 생성
