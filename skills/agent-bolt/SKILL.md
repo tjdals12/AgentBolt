@@ -315,9 +315,28 @@ and the project, settles it with the user, and hands the result to
    | something step 2 did not find | the user — step 4 asks whether it is planned     |
    | nothing                       | the user — step 4 asks whether that work happens |
 
-4. **Ask about everything step 3 left to the user.** This turn's output is
-   the prompts. Number each one `(current/total)` against the count you are
-   sending — `(1/12)`, `(2/12)` — so the user can see how many are coming.
+4. **Ask about everything step 3 left to the user.** Check the tools available
+   in the current environment. If a structured user-question tool is available
+   (e.g. `AskUserQuestion` in Claude Code), use it to ask these questions and
+   use its selection controls when appropriate. Encode the question and choices
+   in the tool call; do not print a Markdown copy of the same choices.
+
+   If no such tool is available, ask one decision group per assistant message
+   and wait for the user's answer before asking the next group. Use a yes-or-no
+   question when one shared premise decides every item in the group, or when the
+   group contains one standalone item; state what yes selects. When a group has
+   two or more independent items, present every item as a numbered choice. The
+   user selects independent items with option numbers, separated by commas when
+   selecting multiple items. If no item applies, accept a negative natural-
+   language reply in the user's language. Do not require the user to repeat the
+   question number or an item name.
+
+   Do not repeat prior answers, ready candidates, or later questions in the
+   same message.
+
+   Number each decision group `(current/total)` — `(1/12)`, `(2/12)` — so the
+   user can see how many are coming, including when plain-text questions are
+   sent in separate messages.
 
    Items that assume something step 2 did not find: group them by the
    assumption, one prompt per assumption, since a single answer decides every
@@ -331,36 +350,31 @@ and the project, settles it with the user, and hands the result to
             pr-review · skill       reviews a PR by number
             pr-rules · guideline    PR structure and review etiquette
 
-     1. yes
-     2. no
+   Reply yes or no.
    ```
 
    Items that assume nothing: every one of them gets its own option, since
    each stands alone and takes its own answer. Lead each option with the
-   situation the item serves; the name follows. Check the ones step 2 found a
-   trace of and say what the trace was; leave the rest unchecked. When there
-   are more than a few, split them across prompts by theme — the theme is the
-   prompt's question, never an option that swallows several items.
+   situation the item serves; the name follows. For a structured user-question
+   tool, make each item a separate selectable option and preselect items step 2
+   found a trace of when the tool supports it; say what the trace was. In plain
+   text, number the items and include the trace. When there are more than a few,
+   split them across prompts by theme — the theme is the prompt's question,
+   never an option that swallows several items.
 
    ```text
-   (2/12) Reviewing and hardening code — which of these happen here? I checked
-   the ones I found traces of.
+   (2/12) Reviewing and hardening code — which of these happen here?
 
-     [x] reviewing changes for correctness after they are written
-           code-reviewer · subagent — CI runs on every pull request
-     [x] building out the automated test setup
-           test-automator · subagent — unit and e2e suites are already wired up
-     [ ] holding the codebase to a written set of code-quality rules
-           clean-code · skill
+   Reply with selected item numbers separated by commas. If none apply, say so.
 
-   (3/12) Product and planning work — which of these happen here?
-
-     [ ] mapping current processes and writing up requirements
-           business-analyst · subagent
-     [ ] deciding what to build next and why
-           product-manager · subagent
-     [ ] validating design decisions with user research
-           ux-researcher · subagent
+     1. code-reviewer · subagent
+       reviewing changes for correctness after they are written
+       trace: CI runs on every pull request
+     2. test-automator · subagent
+       building out the automated test setup
+       trace: unit and e2e suites are already wired up
+     3. clean-code · skill
+       holding the codebase to a written set of code-quality rules
    ```
 
    When the assumptions themselves run long, ask which of them the project
@@ -372,14 +386,16 @@ and the project, settles it with the user, and hands the result to
    (1/12) Which of these does the project use, or plan to? I will list the
    items under whatever you pick.
 
-     [ ] a database and an ORM
-     [ ] a web frontend
-     [ ] a pull-request workflow on a hosted remote
+   Reply with selected item numbers separated by commas. If none apply, say so.
+
+     1. database · a database and an ORM
+     2. frontend · a web frontend
+     3. pull-request · a pull-request workflow on a hosted remote
    ```
 
-   If there is no user to answer — a non-interactive run — or a prompt goes
-   unanswered, do not stall. Those items are undecided rather than declined,
-   and step 5 reports them with the question that would settle them.
+   In a non-interactive run, report only candidates supported by project
+   evidence. Do not select items that require a user answer or continue to
+   installation.
 
 5. **Read the bodies, then report.** The candidate set closes with step 4's
    answers; then one `show-item` call per candidate. `instructions` is what
@@ -387,10 +403,9 @@ and the project, settles it with the user, and hands the result to
    put the body through step 3's test again, and drop any candidate whose body
    assumes something step 2 did not find.
 
-   Report in three parts: what survived, what the body check removed, and
-   every question that went unanswered with the items it would settle. Name
-   every item `source/pack/item`, and a guideline carries the load mode it
-   would be selected with.
+   Report in two parts: what survived and what the body check removed. Name every
+   item `source/pack/item`, and a guideline carries the load mode it would be
+   selected with.
 
    ```text
    Ready to install
@@ -405,23 +420,14 @@ and the project, settles it with the user, and hands the result to
      common/backend/testing-guidelines · guideline
        the body is written for a layered service layout this repo does not use
 
-   Undecided — answer any of these and its items join the list above
-     does this repo push to a remote and open PRs?
-       common/common/create-pr · skill
-       common/common/pr-review · skill
-       common/common/pr-rules · guideline
-
    How would you like to proceed?
      1. install the ready-to-install list as it stands
      2. put common/backend/testing-guidelines back and install with it
-     3. answer the open question first, then install
    ```
 
    Close with numbered options, one line each, and take every option from a
    section you just printed — a section with nothing in it offers nothing.
 
-   When one of those questions gets answered later, read the bodies of its
-   items the same way before adding them to the ready-to-install list.
    **Install items** starts from that list.
 
 **Guardrails**
