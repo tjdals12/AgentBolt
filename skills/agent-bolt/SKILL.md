@@ -321,15 +321,18 @@ and the project, settles it with the user, and hands the result to
 
    Items that assume something step 2 did not find: group them by the
    assumption, one prompt per assumption, since a single answer decides every
-   item in the group. Name every item in the group and what it does.
+   item in the group. The assumption is the prompt's question; name every
+   item the answer brings in and what it does.
 
    ```text
-   (1/12) Which of these does the project use, or plan to?
+   (1/12) Will this project use a pull-request workflow on a hosted remote?
+          Answering yes brings in:
+            create-pr · skill       opens PRs with a standard body
+            pr-review · skill       reviews a PR by number
+            pr-rules · guideline    PR structure and review etiquette
 
-     [ ] a pull-request workflow on a hosted remote
-           create-pr · skill       opens PRs with a standard body
-           pr-review · skill       reviews a PR by number
-           pr-rules · guideline    PR structure and review etiquette
+     1. yes
+     2. no
    ```
 
    Items that assume nothing: every one of them gets its own option, since
@@ -349,22 +352,29 @@ and the project, settles it with the user, and hands the result to
            test-automator · subagent — unit and e2e suites are already wired up
      [ ] holding the codebase to a written set of code-quality rules
            clean-code · skill
+
+   (3/12) Product and planning work — which of these happen here?
+
+     [ ] mapping current processes and writing up requirements
+           business-analyst · subagent
+     [ ] deciding what to build next and why
+           product-manager · subagent
+     [ ] validating design decisions with user research
+           ux-researcher · subagent
    ```
 
-   When a prompt's options run longer than the user will read, ask first about
-   the assumptions or the kinds of work, with every item accounted for by one
-   of them, then list items only under what was picked.
-
-   One option carries one assumption or one kind of work; items a user could
-   want separately never share one.
+   When the assumptions themselves run long, ask which of them the project
+   involves before listing items under each. Items that assume nothing are
+   never folded together this way — standing alone is what put them here, so
+   they take more prompts, not fewer options.
 
    ```text
-   Which of these does this project involve? I will list the items under
-   whatever you pick.
+   (1/12) Which of these does the project use, or plan to? I will list the
+   items under whatever you pick.
 
-     [ ] backend services and their data layer
-     [ ] frontend applications
-     [ ] product planning and user research
+     [ ] a database and an ORM
+     [ ] a web frontend
+     [ ] a pull-request workflow on a hosted remote
    ```
 
    If there is no user to answer — a non-interactive run — or a prompt goes
