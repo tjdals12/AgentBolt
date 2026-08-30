@@ -271,122 +271,157 @@ config is a hand edit.
 
 ## Recommend items for the project
 
-A recommendation is built from four inputs, gathered in order: the catalog
-map, the project, the bodies of the candidates, and the user's answers —
-descriptions narrow the field, bodies carry the verdict, questions cover
-what the code cannot say. The judgment is yours, made in this conversation;
-every final call is the user's.
+No command produces a recommendation. This flow assembles one from the catalog
+and the project, settles it with the user, and hands the result to
+**Install items**.
 
 **Steps**
 
-1. **Map the catalog.** `agent-bolt list-packs --json` and
-   `agent-bolt list-items --json` across every source — the map is every
-   item the catalog offers.
+1. **Map the catalog.** `--source` and `--packs` are optional filters; leave
+   both off.
 
-2. **Read the project.** Stack, structure, configuration, tooling. It
-   qualifies candidates for step 3, and it answers questions before step 4
-   needs to ask them.
-
-3. **First list — what fits now.** Pick the items the project as it stands
-   supports, read the body of each with `show-item`, and keep the ones whose
-   body delivers what the description promises and whose prerequisites the
-   project meets. Judge each kind by what installing it costs:
-
-   | Kind      | Installed, it…                         | So judge it…                                                                      |
-   | --------- | -------------------------------------- | --------------------------------------------------------------------------------- |
-   | guideline | is injected into every agent's context | strictly — one that prescribes what the project does not have is actively harmful |
-   | skill     | runs only when invoked                 | on quality and on whether its prerequisites exist                                 |
-   | subagent  | is a role, used when delegated to      | on whether the project needs that role's work                                     |
-
-4. **Second list — what the user plans.** Every item the map holds that
-   step 3 did not keep, and that the code has not already answered, goes
-   into a question: partition those items into areas and ask about them
-   all. An area is one kind of work — a technology, a workflow, a role
-   — so items serving the same work share one question, and items serving
-   different work get their own: two ORM skills are one question ("which
-   one, if any"), two role agents for different work are two. The question
-   itself carries the presentation — shape it like this:
-
-   ```text
-   Which of these role agents does the project need? (none is fine)
-
-     [ ] business-analyst
-         summary:      maps as-is business processes, elicits requirements,
-                       and finds process gaps
-         recommended:  requirements analysis will be delegated to an agent
-     [ ] ux-researcher
-         summary:      plans user research and turns findings into
-                       actionable insights
-         recommended:  user research happens in this project
+   ```bash
+   agent-bolt list-items --json
    ```
 
-   Items that do not fit one prompt go into the next, along the same work
-   boundaries. A yes sends those items through step 3's body check. When
-   the session cannot ask, or an asked question gets no answer, carry the
-   area into step 5 marked "needs confirmation" together with the question
-   that would settle it.
+   The response holds every pack of every source, each item with its name and
+   description — the working set for the rest of the flow. One call is enough:
+   `list-packs` only adds counts, which are the lengths of these lists.
 
-5. **The record — what was not taken.** Every item on the map ends in a
-   kept list or here, and it arrives here only through step 4 — declined,
-   its `recommended:` line naming what would bring it back, or unanswered,
-   under the question that would settle it. Entries keep the labeled shape
-   of **Explore the catalog** step 3. Descriptions carry them; read a body
-   only when the user picks an item up.
+   A source that lands in `failures` is a hole in the map — say so rather than
+   recommending over it.
 
-6. **Report and hand over.** Report every group — each entry with what
-   decided it — answering from the body where the user hesitates. An open
-   question from the record can be settled right there; the flow ends when
-   every item on the map is chosen, declined, or recorded with its
-   question. The chosen set goes through **Install items**. The shape of
-   the report:
+2. **Read the project.** Stay inside the repository; these are the sources:
+
+   | Source                                            | What to take from it                                              |
+   | ------------------------------------------------- | ----------------------------------------------------------------- |
+   | dependency manifests and lockfiles                | the stack in use                                                  |
+   | the repository tree                               | structure, tooling, and the workflows that run — tests, CI, hooks |
+   | the README                                        | what the project is for, and any stack it says it is moving to    |
+   | instruction files (e.g. `CLAUDE.md`, `AGENTS.md`) | conventions the user wrote down                                   |
+
+   An instruction file may contain a block between `<!-- bolt:start -->` and
+   `<!-- bolt:end -->`. Skip it: `sync` wrote that block from the current
+   config, so it describes what is already installed, not what the project is.
+
+3. **Decide who settles each item.** Work item by item, not pack by pack. Each
+   description says what the item is for, and its assumption follows from that
+   — a tool, a framework, a workflow, or a kind of work. Some descriptions
+   state it outright.
+
+   | The item assumes              | Settled by                                       |
+   | ----------------------------- | ------------------------------------------------ |
+   | something step 2 found        | the code — carry it forward as a candidate       |
+   | something step 2 did not find | the user — step 4 asks whether it is planned     |
+   | nothing                       | the user — step 4 asks whether that work happens |
+
+4. **Ask about everything step 3 left to the user.** This turn's output is
+   the prompts. Number each one `(current/total)` against the count you are
+   sending — `(1/12)`, `(2/12)` — so the user can see how many are coming.
+
+   Items that assume something step 2 did not find: group them by the
+   assumption, one prompt per assumption, since a single answer decides every
+   item in the group. Name every item in the group and what it does.
 
    ```text
-   Fits now — bodies read and verified
-     common/create-commit · skill
+   (1/12) Which of these does the project use, or plan to?
+
+     [ ] a pull-request workflow on a hosted remote
+           create-pr · skill       opens PRs with a standard body
+           pr-review · skill       reviews a PR by number
+           pr-rules · guideline    PR structure and review etiquette
+   ```
+
+   Items that assume nothing: every one of them gets its own option, since
+   each stands alone and takes its own answer. Lead each option with the
+   situation the item serves; the name follows. Check the ones step 2 found a
+   trace of and say what the trace was; leave the rest unchecked. When there
+   are more than a few, split them across prompts by theme — the theme is the
+   prompt's question, never an option that swallows several items.
+
+   ```text
+   (2/12) Reviewing and hardening code — which of these happen here? I checked
+   the ones I found traces of.
+
+     [x] reviewing changes for correctness after they are written
+           code-reviewer · subagent — CI runs on every pull request
+     [x] building out the automated test setup
+           test-automator · subagent — unit and e2e suites are already wired up
+     [ ] holding the codebase to a written set of code-quality rules
+           clean-code · skill
+   ```
+
+   When a prompt's options run longer than the user will read, ask first about
+   the assumptions or the kinds of work, with every item accounted for by one
+   of them, then list items only under what was picked.
+
+   One option carries one assumption or one kind of work; items a user could
+   want separately never share one.
+
+   ```text
+   Which of these does this project involve? I will list the items under
+   whatever you pick.
+
+     [ ] backend services and their data layer
+     [ ] frontend applications
+     [ ] product planning and user research
+   ```
+
+   If there is no user to answer — a non-interactive run — or a prompt goes
+   unanswered, do not stall. Those items are undecided rather than declined,
+   and step 5 reports them with the question that would settle them.
+
+5. **Read the bodies, then report.** The candidate set closes with step 4's
+   answers; then one `show-item` call per candidate. `instructions` is what
+   the item installs, and a description can understate what the item takes —
+   put the body through step 3's test again, and drop any candidate whose body
+   assumes something step 2 did not find.
+
+   Report in three parts: what survived, what the body check removed, and
+   every question that went unanswered with the items it would settle. Name
+   every item `source/pack/item`, and a guideline carries the load mode it
+   would be selected with.
+
+   ```text
+   Ready to install
+     common/common/create-commit · skill
        summary:  writes Conventional Commits messages from the diff
-       why:      the body assumes nothing beyond git, which the project has
-     common/commit-rules · guideline · load: always
+       why:      the body needs git and nothing else
+     common/common/commit-rules · guideline · load: always
        summary:  four lines of commit format rules
-       why:      matches create-commit, and light enough to sit in every
-                 agent's context
+       why:      a commit hook already enforces this format
 
-   Planned — confirmed in this conversation
-     backend/prisma-expert · skill
-       summary:  schema, migration, and query optimization playbook
-       why:      Prisma confirmed for this project
+   Removed after reading the body
+     common/backend/testing-guidelines · guideline
+       the body is written for a layered service layout this repo does not use
 
-   Declined — with what would bring each back
-     common/ux-researcher · agent
-       summary:      plans user research and turns findings into
-                     actionable insights
-       recommended:  user research happens in this project
-     frontend/react-dev · skill
-       summary:      React implementation patterns for components, state,
-                     and effects
-       recommended:  a React frontend is added
+   Undecided — answer any of these and its items join the list above
+     does this repo push to a remote and open PRs?
+       common/common/create-pr · skill
+       common/common/pr-review · skill
+       common/common/pr-rules · guideline
 
-   Needs confirmation — one answer settles each
-     will this repo push to a remote and use PRs?
-       create-pr · skill
-         summary:      opens pull requests with a standard body via gh
-         recommended:  a GitHub remote with a PR workflow is in place
-
-   Shall I install the "fits now" and "planned" lists? The open question
-   can be answered any time, and I can read any item's body for a closer
-   look.
+   How would you like to proceed?
+     1. install the ready-to-install list as it stands
+     2. put common/backend/testing-guidelines back and install with it
+     3. answer the open question first, then install
    ```
+
+   Close with numbered options, one line each, and take every option from a
+   section you just printed — a section with nothing in it offers nothing.
+
+   When one of those questions gets answered later, read the bodies of its
+   items the same way before adding them to the ready-to-install list.
+   **Install items** starts from that list.
 
 **Guardrails**
 
-- Never claim an item fits before reading its body — and read the bodies
-  of candidates, not of the whole catalog.
-- Derive every question from items that exist. When no item hangs on the
-  answer, there is no question.
-- Prompt options follow the question shape of step 4; an item that does not
-  fit a prompt moves into the next one.
-- Questions and the report are the flow's only output.
-- Say what a guideline imposes before recommending it — its body lands in
-  the project's rules or instructions file as written.
+- Reserve `show-item` for candidates — reading the catalog's bodies to route
+  them costs many times what the descriptions cost.
+- Do not ask a question whose answer would not change what you recommend —
+  every prompt is built from items in the working set.
+- Say what a guideline's load mode means when recommending one: `always`
+  applies it at all times, `conditional` only to files matching its globs.
 
 ## Install items
 
