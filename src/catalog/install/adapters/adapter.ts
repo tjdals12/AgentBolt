@@ -48,7 +48,7 @@ export abstract class Adapter {
   }): string {
     const { name, description, toolConfig } = data;
     const vendorConfig = this.selectVendorConfig(toolConfig);
-    return this.formatFrontmatter({ name, description, ...vendorConfig });
+    return this.formatFrontmatter({ ...vendorConfig, name, description });
   }
 
   abstract renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill;

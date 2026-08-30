@@ -38,7 +38,7 @@ export class OpenCodeAdapter extends Adapter {
     const { name: agentName, description, toolConfig, instructions } = agent;
     const installName = this.buildInstallName(sourceAlias, packName, agentName);
     const vendorConfig = this.selectVendorConfig(toolConfig);
-    const frontmatter = this.formatFrontmatter({ description, mode: 'subagent', ...vendorConfig });
+    const frontmatter = this.formatFrontmatter({ mode: 'subagent', ...vendorConfig, description });
 
     const filePath = path.join(this.agentsDir, `${installName}.md`);
     const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;

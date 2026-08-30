@@ -43,10 +43,10 @@ export class CodexAdapter extends Adapter {
     const placeholder = '__BOLT_DEVELOPER_INSTRUCTIONS';
 
     const serialized = toml.stringify({
+      ...vendorConfig,
       name: installName,
       description,
       developer_instructions: placeholder,
-      ...vendorConfig,
     });
 
     const escaped = instructions.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"');
