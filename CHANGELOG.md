@@ -1,3 +1,9 @@
+# [1.4.0-next.2](https://github.com/tjdals12/AgentBolt/compare/v1.4.0-next.1...v1.4.0-next.2) (2026-08-31)
+
+### Features
+
+- add agent-bolt usage skill ([#10](https://github.com/tjdals12/AgentBolt/issues/10)) ([559cac4](https://github.com/tjdals12/AgentBolt/commit/559cac4c36c06779322db16f53b3f6ef075db6a2))
+
 # [1.4.0-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.3.0...v1.4.0-next.1) (2026-08-28)
 
 ### Features
