@@ -7,12 +7,11 @@ import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
 
 export class CopilotAdapter extends Adapter {
-  private readonly skillsDir: string = '.github/skills';
   private readonly agentsDir: string = '.github/agents';
   private readonly instructionsDir: string = '.github/instructions';
 
   constructor() {
-    super({ id: 'copilot' });
+    super({ id: 'copilot', skillsDir: '.github/skills' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {
@@ -25,6 +24,7 @@ export class CopilotAdapter extends Adapter {
     const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       skillName,
       dir,
@@ -44,6 +44,7 @@ export class CopilotAdapter extends Adapter {
     const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       agentName,
       filePath,
@@ -69,6 +70,7 @@ export class CopilotAdapter extends Adapter {
 
     return {
       kind: 'rule-file',
+      sourceAlias,
       packName,
       guidelineName,
       filePath,

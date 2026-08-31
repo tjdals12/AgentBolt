@@ -25,11 +25,12 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
     const changes: SyncChange[] = [];
 
     for (const renderedSkill of renderedSkills) {
-      const { packName, skillName } = renderedSkill;
+      const { sourceAlias, packName, skillName } = renderedSkill;
 
       const status = classifySkill(projectPath, renderedSkill);
       if (status) {
         changes.push({
+          source: sourceAlias,
           label: `${packName}/${skillName}`,
           status,
         });
@@ -37,7 +38,7 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
     }
 
     for (const renderedAgent of renderedAgents) {
-      const { packName, agentName, filePath, content } = renderedAgent;
+      const { sourceAlias, packName, agentName, filePath, content } = renderedAgent;
       const agentFilePath = path.join(projectPath, filePath);
 
       const before = fs.existsSync(agentFilePath) ? fs.readFileSync(agentFilePath, 'utf-8') : null;
@@ -45,6 +46,7 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
       const status = classifyChange(before, content);
       if (status) {
         changes.push({
+          source: sourceAlias,
           label: `${packName}/${agentName}`,
           status,
         });
@@ -54,7 +56,7 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
     for (const renderedGuideline of renderedGuidelines) {
       const { packName, guidelineName, kind } = renderedGuideline;
       if (kind === 'rule-file') {
-        const { filePath, content } = renderedGuideline;
+        const { sourceAlias, filePath, content } = renderedGuideline;
         const guidelineFilePath = path.join(projectPath, filePath);
 
         const before = fs.existsSync(guidelineFilePath)
@@ -64,6 +66,7 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
         const status = classifyChange(before, content);
         if (status) {
           changes.push({
+            source: sourceAlias,
             label: `${packName}/${guidelineName}`,
             status,
           });
@@ -87,7 +90,11 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
     const status = classifyChange(before, content);
     if (status) {
       for (const tool of tools) {
-        (changeSet[tool] ??= []).push({ label: `${filePath} (managed block)`, status });
+        (changeSet[tool] ??= []).push({
+          source: null,
+          label: `${filePath} (managed block)`,
+          status,
+        });
       }
     }
   }
@@ -96,6 +103,7 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
   const removedItemsByTool = Object.entries(removed);
   for (const [tool, removedItems] of removedItemsByTool) {
     const syncChanges = removedItems.map<SyncChange>((removedItem) => ({
+      source: null,
       label: removedItem.label,
       status: 'removed',
     }));

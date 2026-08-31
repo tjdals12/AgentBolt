@@ -31,6 +31,23 @@ export class CheckCommand {
     return { checkResult, drifted };
   }
 
+  toJson(result: { checkResult: CheckResult; drifted: boolean }) {
+    const { checkResult, drifted } = result;
+    return {
+      tools: checkResult.map(({ tool, counts, changes }) => ({
+        tool,
+        counts,
+        changes: changes.map(({ source, label, status }) => ({
+          source,
+          label,
+          status:
+            status === 'installed' ? 'missing' : status === 'updated' ? 'drifted' : 'orphaned',
+        })),
+      })),
+      drifted,
+    };
+  }
+
   private buildCheckResults(toolPlans: ToolPlan[], changeSet: ChangeSet): CheckResult {
     return toolPlans.map((toolPlan) => {
       const { tool, renderedSkills, renderedAgents, renderedGuidelines } = toolPlan;

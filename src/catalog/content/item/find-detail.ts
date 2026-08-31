@@ -64,6 +64,7 @@ export function findSkill(catalogDir: string, packName: string, skillName: strin
     description: manifest.description,
     toolConfig: manifest.toolConfig,
     instructions,
+    instructionsPath,
     sourceDir,
     assets,
   };
@@ -92,6 +93,7 @@ export function findAgent(catalogDir: string, packName: string, agentName: strin
     description: manifest.description,
     toolConfig: manifest.toolConfig,
     instructions,
+    instructionsPath,
   };
 }
 
@@ -128,5 +130,6 @@ export function findGuideline(
     description: manifest.description,
     recommended: manifest.recommended,
     body,
+    bodyPath,
   };
 }

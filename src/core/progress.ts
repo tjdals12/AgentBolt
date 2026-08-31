@@ -6,7 +6,10 @@ export abstract class ProgressReporter {
   abstract fail(reason: string): void;
   abstract stop(): void;
 
-  static create(): ProgressReporter {
+  static create(options: { silent?: boolean } = {}): ProgressReporter {
+    if (options.silent) {
+      return new NoopReporter();
+    }
     return process.stdout.isTTY ? new LineReporter() : new NoopReporter();
   }
 }

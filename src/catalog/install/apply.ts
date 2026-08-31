@@ -27,8 +27,16 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
     const syncChanges: SyncChange[] = [];
 
     for (const renderedSkill of renderedSkills) {
-      const { packName, skillName, dir, entryFileName, entryContent, sourceDir, assets } =
-        renderedSkill;
+      const {
+        sourceAlias,
+        packName,
+        skillName,
+        dir,
+        entryFileName,
+        entryContent,
+        sourceDir,
+        assets,
+      } = renderedSkill;
       const skillDirPath = path.join(projectPath, dir);
       const skillEntryFilePath = path.join(skillDirPath, entryFileName);
 
@@ -46,6 +54,7 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
 
       if (status) {
         syncChanges.push({
+          source: sourceAlias,
           label: `${packName}/${skillName}`,
           status,
         });
@@ -53,7 +62,7 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
     }
 
     for (const renderedAgent of renderedAgents) {
-      const { packName, agentName, filePath, content } = renderedAgent;
+      const { sourceAlias, packName, agentName, filePath, content } = renderedAgent;
       const agentFilePath = path.join(projectPath, filePath);
       const agentDirPath = path.dirname(agentFilePath);
 
@@ -64,13 +73,13 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
 
       const status = classifyChange(before, content);
       if (status) {
-        syncChanges.push({ label: `${packName}/${agentName}`, status });
+        syncChanges.push({ source: sourceAlias, label: `${packName}/${agentName}`, status });
       }
     }
 
     for (const renderedGuideline of renderedGuidelines) {
       if (renderedGuideline.kind === 'rule-file') {
-        const { packName, guidelineName, filePath, content } = renderedGuideline;
+        const { sourceAlias, packName, guidelineName, filePath, content } = renderedGuideline;
         const guidelineFilePath = path.join(projectPath, filePath);
         const guidelineDirPath = path.dirname(guidelineFilePath);
 
@@ -83,7 +92,7 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
 
         const status = classifyChange(before, content);
         if (status) {
-          syncChanges.push({ label: `${packName}/${guidelineName}`, status });
+          syncChanges.push({ source: sourceAlias, label: `${packName}/${guidelineName}`, status });
         }
       }
     }
@@ -108,7 +117,11 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
     const status = classifyChange(before, content);
     if (status) {
       for (const tool of tools) {
-        (changeSet[tool] ??= []).push({ label: `${filePath} (managed block)`, status });
+        (changeSet[tool] ??= []).push({
+          source: null,
+          label: `${filePath} (managed block)`,
+          status,
+        });
       }
     }
   }
@@ -123,6 +136,7 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
   const removedItemsByTool = Object.entries(removed);
   for (const [tool, removedItems] of removedItemsByTool) {
     const syncChanges = removedItems.map<SyncChange>((removedItem) => ({
+      source: null,
       label: removedItem.label,
       status: 'removed',
     }));

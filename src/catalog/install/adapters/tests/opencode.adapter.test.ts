@@ -9,6 +9,7 @@ function makeSkill(overrides: Partial<Skill> = {}): Skill {
     name: 'create-commit',
     description: 'Creates commits',
     instructions: 'Do the thing.',
+    instructionsPath: '/catalog/packs/pack/skills/create-commit/instructions.md',
     sourceDir: '/catalog/packs/pack/skills/create-commit',
     assets: [],
     ...overrides,
@@ -20,6 +21,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     name: 'reviewer',
     description: 'Reviews code',
     instructions: 'Be helpful.',
+    instructionsPath: '/catalog/packs/pack/agents/reviewer/instructions.md',
     ...overrides,
   };
 }
@@ -30,6 +32,7 @@ function makeGuideline(overrides: Partial<Guideline> = {}): Guideline {
     description: 'Commit conventions',
     recommended: { load: 'always' },
     body: 'Write good commits.',
+    bodyPath: '/catalog/packs/pack/guidelines/commit-rules/body.md',
     ...overrides,
   };
 }
@@ -83,19 +86,25 @@ describe('OpenCodeAdapter.renderAgent', () => {
     expect(rendered.content.endsWith('Be helpful.\n')).toBe(true);
   });
 
-  it('merges only the opencode vendor config and lets it override the default mode (U-OPENCODE-3)', () => {
+  it('merges only the opencode vendor config, preserves the catalog description, and lets it override the default mode (U-OPENCODE-3)', () => {
     const rendered = adapter.renderAgent(
       'src',
       'pack',
       makeAgent({
         toolConfig: {
-          opencode: { mode: 'primary', model: 'anthropic/claude', temperature: 0.2 },
+          opencode: {
+            description: 'Custom description',
+            mode: 'primary',
+            model: 'anthropic/claude',
+            temperature: 0.2,
+          },
           codex: { sandbox_mode: 'read-only' },
         },
       }),
     );
 
     const frontmatter = parseFrontmatter(rendered.content);
+    expect(frontmatter.description).toBe('Reviews code');
     expect(frontmatter.mode).toBe('primary');
     expect(frontmatter.model).toBe('anthropic/claude');
     expect(frontmatter.temperature).toBe(0.2);

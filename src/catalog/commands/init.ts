@@ -28,14 +28,20 @@ export class InitCommand {
   private readonly _tools?: string;
   private readonly _sources: string[];
   private readonly _force: boolean;
+  private readonly _json: boolean;
 
-  constructor(options: { tools?: string; source: string[]; force: boolean }) {
+  constructor(options: { tools?: string; source: string[]; force: boolean; json: boolean }) {
     this._tools = options.tools;
     this._sources = options.source;
     this._force = options.force;
+    this._json = options.json;
   }
 
   async execute(projectPath: string): Promise<InitResult> {
+    if (this._json && this._tools === undefined) {
+      throw new Error(`--tools is required with --json. e.g. --tools=claude,codex`);
+    }
+
     const configPath = buildCatalogConfigPath(projectPath);
     const interactive = this.resolveInteractive();
 
@@ -67,6 +73,16 @@ export class InitCommand {
     this.writeConfig(configPath, normalizedConfig);
 
     return { configPath, tools, sources, orphanedSourceAliases };
+  }
+
+  toJson(result: InitResult) {
+    const { configPath, tools, sources, orphanedSourceAliases } = result;
+    return {
+      configPath,
+      tools,
+      sources,
+      orphanedSources: orphanedSourceAliases,
+    };
   }
 
   private resolveInteractive(): boolean {

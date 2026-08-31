@@ -7,12 +7,11 @@ import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
 
 export class CursorAdapter extends Adapter {
-  private readonly skillsDir: string = '.cursor/skills';
   private readonly agentsDir: string = '.cursor/agents';
   private readonly rulesDir: string = '.cursor/rules';
 
   constructor() {
-    super({ id: 'cursor' });
+    super({ id: 'cursor', skillsDir: '.cursor/skills' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {
@@ -25,6 +24,7 @@ export class CursorAdapter extends Adapter {
     const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       skillName,
       dir,
@@ -44,6 +44,7 @@ export class CursorAdapter extends Adapter {
     const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;
 
     return {
+      sourceAlias,
       packName,
       agentName,
       filePath,
@@ -76,6 +77,7 @@ export class CursorAdapter extends Adapter {
 
     return {
       kind: 'rule-file',
+      sourceAlias,
       packName,
       guidelineName,
       filePath,
