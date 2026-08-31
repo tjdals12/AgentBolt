@@ -336,6 +336,56 @@ Here's what each marker in the output means:
 | `~`    | drifted  | Installed, but its contents differ from the catalog |
 | `-`    | orphaned | Removed from your config file but still installed   |
 
+### Install the agent skill
+
+AgentBolt ships a skill that teaches your AI agent how to drive the CLI — exploring catalogs, picking items, and syncing — through conversation. Install it into every agent in your config:
+
+```text
+$ agent-bolt skill install
+
+▌ Agent Bolt: Installed agent-bolt skill
+
+skill:   agent-bolt
+version: 1.4.0
+
+  + .claude/skills/agent-bolt
+  + .codex/skills/agent-bolt
+```
+
+Once installed, you can ask your agent things like this in chat.
+
+#### Explore the catalog
+
+```text
+User: What packs and items are available in the connected catalog?
+Agent: I'll summarize the skills, agents, and guidelines in each pack.
+
+backend — assets for NestJS/Prisma backend development
+  nestjs-expert · skill
+  developer · agent
+  prisma-schema · guideline · load: conditional
+  …
+```
+
+#### Get recommendations for a project
+
+```text
+User: What items would fit this project?
+Agent: I'll inspect the project and catalog, then suggest candidates with the reasoning behind them.
+
+Recommended
+  backend/nestjs-expert · skill
+    Fits work on the NestJS application structure and implementation.
+  backend/prisma-expert · skill
+    Applies to this project's Prisma schema and data-access layer.
+  …
+
+User: Install the backend pack from those options.
+Agent: I've updated the configuration. May I run sync to install the files?
+```
+
+The skill lands as an `agent-bolt/` directory under each agent's skills directory. It is not tracked by `sync`/`check`, and re-running `skill install` overwrites it in place — run it again after upgrading AgentBolt to keep the skill in step with the CLI.
+
 ## Creating a catalog
 
 AgentBolt ships `catalog` commands for building and managing catalogs.
@@ -639,6 +689,18 @@ Checks whether what's installed has drifted from your config file. Exits with co
 
 ```text
 agent-bolt check [options]
+```
+
+| Option   | Description              | Required | Default |
+| -------- | ------------------------ | -------- | ------- |
+| `--json` | Print the result as JSON | Optional | —       |
+
+### `agent-bolt skill install`
+
+Installs the agent-bolt skill into each agent selected in your config. Re-running it overwrites the installed copies — do this after upgrading AgentBolt.
+
+```text
+agent-bolt skill install [options]
 ```
 
 | Option   | Description              | Required | Default |

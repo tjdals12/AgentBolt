@@ -7,11 +7,10 @@ import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
 
 export class OpenCodeAdapter extends Adapter {
-  private readonly skillsDir: string = '.opencode/skills';
   private readonly agentsDir: string = '.opencode/agents';
 
   constructor() {
-    super({ id: 'opencode', managedBlockFile: 'AGENTS.md' });
+    super({ id: 'opencode', skillsDir: '.opencode/skills', managedBlockFile: 'AGENTS.md' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {
@@ -39,7 +38,7 @@ export class OpenCodeAdapter extends Adapter {
     const { name: agentName, description, toolConfig, instructions } = agent;
     const installName = this.buildInstallName(sourceAlias, packName, agentName);
     const vendorConfig = this.selectVendorConfig(toolConfig);
-    const frontmatter = this.formatFrontmatter({ description, mode: 'subagent', ...vendorConfig });
+    const frontmatter = this.formatFrontmatter({ mode: 'subagent', ...vendorConfig, description });
 
     const filePath = path.join(this.agentsDir, `${installName}.md`);
     const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;

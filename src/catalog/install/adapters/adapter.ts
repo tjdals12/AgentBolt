@@ -13,13 +13,19 @@ export abstract class Adapter {
     return this._id;
   }
 
+  protected readonly _skillsDir: string;
+  get skillsDir() {
+    return this._skillsDir;
+  }
+
   protected readonly _managedBlockFile?: string;
   get managedBlockFile() {
     return this._managedBlockFile;
   }
 
-  constructor(args: { id: ToolId; managedBlockFile?: string }) {
+  constructor(args: { id: ToolId; skillsDir: string; managedBlockFile?: string }) {
     this._id = args.id;
+    this._skillsDir = args.skillsDir;
     this._managedBlockFile = args.managedBlockFile;
   }
 
@@ -42,7 +48,7 @@ export abstract class Adapter {
   }): string {
     const { name, description, toolConfig } = data;
     const vendorConfig = this.selectVendorConfig(toolConfig);
-    return this.formatFrontmatter({ name, description, ...vendorConfig });
+    return this.formatFrontmatter({ ...vendorConfig, name, description });
   }
 
   abstract renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill;

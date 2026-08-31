@@ -8,11 +8,10 @@ import type { RenderedSkill, RenderedAgent, RenderedGuideline } from '../model.j
 import { Adapter } from './adapter.js';
 
 export class CodexAdapter extends Adapter {
-  private readonly skillsDir: string = '.codex/skills';
   private readonly agentsDir: string = '.codex/agents';
 
   constructor() {
-    super({ id: 'codex', managedBlockFile: 'AGENTS.md' });
+    super({ id: 'codex', skillsDir: '.codex/skills', managedBlockFile: 'AGENTS.md' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {
@@ -44,10 +43,10 @@ export class CodexAdapter extends Adapter {
     const placeholder = '__BOLT_DEVELOPER_INSTRUCTIONS';
 
     const serialized = toml.stringify({
+      ...vendorConfig,
       name: installName,
       description,
       developer_instructions: placeholder,
-      ...vendorConfig,
     });
 
     const escaped = instructions.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"');

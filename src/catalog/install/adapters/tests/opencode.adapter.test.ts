@@ -86,19 +86,25 @@ describe('OpenCodeAdapter.renderAgent', () => {
     expect(rendered.content.endsWith('Be helpful.\n')).toBe(true);
   });
 
-  it('merges only the opencode vendor config and lets it override the default mode (U-OPENCODE-3)', () => {
+  it('merges only the opencode vendor config, preserves the catalog description, and lets it override the default mode (U-OPENCODE-3)', () => {
     const rendered = adapter.renderAgent(
       'src',
       'pack',
       makeAgent({
         toolConfig: {
-          opencode: { mode: 'primary', model: 'anthropic/claude', temperature: 0.2 },
+          opencode: {
+            description: 'Custom description',
+            mode: 'primary',
+            model: 'anthropic/claude',
+            temperature: 0.2,
+          },
           codex: { sandbox_mode: 'read-only' },
         },
       }),
     );
 
     const frontmatter = parseFrontmatter(rendered.content);
+    expect(frontmatter.description).toBe('Reviews code');
     expect(frontmatter.mode).toBe('primary');
     expect(frontmatter.model).toBe('anthropic/claude');
     expect(frontmatter.temperature).toBe(0.2);

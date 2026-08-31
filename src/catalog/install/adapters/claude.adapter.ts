@@ -7,12 +7,11 @@ import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
 
 export class ClaudeAdapter extends Adapter {
-  private readonly skillsDir: string = '.claude/skills';
   private readonly agentsDir: string = '.claude/agents';
   private readonly rulesDir: string = '.claude/rules';
 
   constructor() {
-    super({ id: 'claude' });
+    super({ id: 'claude', skillsDir: '.claude/skills' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {
