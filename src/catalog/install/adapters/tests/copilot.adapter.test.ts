@@ -30,6 +30,7 @@ function makeGuideline(overrides: Partial<Guideline> = {}): Guideline {
   return {
     name: 'commit-rules',
     description: 'Commit conventions',
+    usage: 'Read before writing a commit.',
     recommended: { load: 'always' },
     body: 'Write good commits.',
     bodyPath: '/catalog/packs/pack/guidelines/commit-rules/body.md',
@@ -48,20 +49,16 @@ function parseFrontmatter(content: string): Record<string, unknown> {
 describe('CopilotAdapter.renderGuideline', () => {
   const adapter = new CopilotAdapter();
 
-  it('maps an always guideline to applyTo ** as an .instructions.md file (U-COPILOT-1)', () => {
+  it('renders an always guideline as a repository instructions block fragment (U-COPILOT-1)', () => {
     const rendered = adapter.renderGuideline('src', 'pack', makeGuideline(), { load: 'always' });
 
-    if (rendered.kind !== 'rule-file') {
-      throw new Error('expected a rule-file guideline');
+    if (rendered.kind !== 'block-fragment') {
+      throw new Error('expected a block-fragment guideline');
     }
-    expect(rendered.filePath).toBe(
-      '.github/instructions/bolt-src-pack-commit-rules.instructions.md',
+    expect(adapter.managedBlockFile).toBe('.github/copilot-instructions.md');
+    expect(rendered.fragment).toBe(
+      '<!-- bolt: src/pack/commit-rules - Commit conventions -->\n\nWrite good commits.',
     );
-
-    const frontmatter = parseFrontmatter(rendered.content);
-    expect(frontmatter.applyTo).toBe('**');
-    expect(frontmatter.description).toBe('Commit conventions');
-    expect(rendered.content.endsWith('Write good commits.\n')).toBe(true);
   });
 
   it('serializes conditional globs as a comma-joined applyTo string without spaces (U-COPILOT-2)', () => {

@@ -12,6 +12,7 @@ import {
 } from './managed-block/render.js';
 import { groupManagedBlocksByFile } from './managed-block/group.js';
 import { classifyChange, classifySkill } from './classify.js';
+import { collectReferenceFiles } from './reference.js';
 
 export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet {
   const previousLockfile = loadLockfile(projectPath);
@@ -98,6 +99,28 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
     }
 
     changeSet[tool] = syncChanges;
+  }
+
+  const referenceFiles = collectReferenceFiles(toolPlans);
+  for (const referenceFile of referenceFiles) {
+    const { sourceAlias, packName, guidelineName, filePath, content, tools } = referenceFile;
+    const referencePath = path.join(projectPath, filePath);
+    const referenceDirPath = path.dirname(referencePath);
+    const before = fs.existsSync(referencePath) ? fs.readFileSync(referencePath, 'utf-8') : null;
+    const status = classifyChange(before, content);
+
+    fs.mkdirSync(referenceDirPath, { recursive: true });
+    fs.writeFileSync(referencePath, content, 'utf-8');
+
+    if (status) {
+      for (const tool of tools) {
+        (changeSet[tool] ??= []).push({
+          source: sourceAlias,
+          label: `${packName}/${guidelineName}`,
+          status,
+        });
+      }
+    }
   }
 
   const managedBlocks = groupManagedBlocksByFile(toolPlans);

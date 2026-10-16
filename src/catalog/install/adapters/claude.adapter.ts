@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import type { GuidelineSelection } from '#catalog/config/schema.js';
 
+import { DEFAULT_GUIDELINE_USAGE } from '../reference.js';
 import { Adapter } from './adapter.js';
 import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '../model.js';
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
@@ -11,7 +12,7 @@ export class ClaudeAdapter extends Adapter {
   private readonly rulesDir: string = '.claude/rules';
 
   constructor() {
-    super({ id: 'claude', skillsDir: '.claude/skills' });
+    super({ id: 'claude', skillsDir: '.claude/skills', managedBlockFile: 'CLAUDE.md' });
   }
 
   override renderSkill(sourceAlias: string, packName: string, skill: Skill): RenderedSkill {
@@ -58,13 +59,47 @@ export class ClaudeAdapter extends Adapter {
     guideline: Guideline,
     guidelineSelection: GuidelineSelection,
   ): RenderedGuideline {
-    const { name: guidelineName, description, body } = guideline;
+    const { name: guidelineName, description, body, usage } = guideline;
+
+    if (guidelineSelection.load === 'reference') {
+      const guidelineUsage = guidelineSelection.usage ?? usage;
+      const installName = this.buildInstallName(sourceAlias, packName, guidelineName);
+      const filePath = path.join(guidelineSelection.path, `${installName}.md`);
+      const linkPath = filePath;
+      const linkPathSegments = linkPath.split(path.sep);
+      const encodedLinkPathSegments = linkPathSegments.map((segment) =>
+        encodeURIComponent(segment),
+      );
+      const link = encodedLinkPathSegments.join('/');
+
+      return {
+        kind: 'reference-file',
+        sourceAlias,
+        packName,
+        guidelineName,
+        usage: guidelineUsage,
+        filePath,
+        content: body,
+        reference: `- [${guidelineName}](${link}): ${guidelineUsage ?? DEFAULT_GUIDELINE_USAGE}`,
+      };
+    }
+
+    if (guidelineSelection.load === 'always') {
+      const sourceTag = `<!-- bolt: ${sourceAlias}/${packName}/${guidelineName} - ${description} -->`;
+
+      return {
+        kind: 'block-fragment',
+        sourceAlias,
+        packName,
+        guidelineName,
+        usage,
+        fragment: `${sourceTag}\n\n${body}`,
+      };
+    }
+
     const installName = this.buildInstallName(sourceAlias, packName, guidelineName);
 
-    const data: Record<string, unknown> = { description };
-    if (guidelineSelection.load === 'conditional') {
-      data.paths = guidelineSelection.glob;
-    }
+    const data: Record<string, unknown> = { description, paths: guidelineSelection.glob };
     const frontmatter = this.formatFrontmatter(data);
 
     const filePath = path.join(this.rulesDir, `${installName}.md`);
@@ -75,6 +110,7 @@ export class ClaudeAdapter extends Adapter {
       sourceAlias,
       packName,
       guidelineName,
+      usage,
       filePath,
       content,
     };

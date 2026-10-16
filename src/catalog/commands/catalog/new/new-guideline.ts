@@ -15,6 +15,7 @@ export class NewGuidelineCommand extends NewItemCommand {
     buildManifest: ({ name, description, bodyRef }) => ({
       name,
       description,
+      usage: 'TODO: describe when to read this guideline',
       body: bodyRef,
       recommended: { load: 'always' },
     }),

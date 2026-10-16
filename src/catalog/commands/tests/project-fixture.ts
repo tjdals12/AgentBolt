@@ -24,7 +24,8 @@ export interface AgentSpec {
 export interface GuidelineSpec {
   description?: string;
   body?: string;
-  recommended?: GuidelineLoad;
+  recommended?: GuidelineLoad | { load: 'reference'; path: string };
+  usage?: string;
 }
 
 export interface PackSpec {
@@ -45,7 +46,7 @@ type SourceSpec =
 interface PackSelectionSpec {
   skills?: string[];
   agents?: string[];
-  guidelines?: Record<string, GuidelineLoad>;
+  guidelines?: Record<string, GuidelineLoad | { load: 'reference'; path: string; usage?: string }>;
 }
 
 export interface ConfigSpec {
@@ -137,6 +138,7 @@ export function writeCatalog(
         description: guideline.description ?? `${name} guideline`,
         body: './content.md',
         recommended: guideline.recommended ?? { load: 'always' },
+        usage: guideline.usage ?? `Read before working on ${name}.`,
       });
       writeText(path.join(dir, 'content.md'), guideline.body ?? `${name} body\n`);
     }

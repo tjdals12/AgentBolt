@@ -23,6 +23,7 @@ export type RenderedGuideline =
       sourceAlias: string;
       packName: string;
       guidelineName: string;
+      usage?: string;
       filePath: string;
       content: string;
     }
@@ -31,12 +32,24 @@ export type RenderedGuideline =
       sourceAlias: string;
       packName: string;
       guidelineName: string;
+      usage?: string;
       fragment: string;
+    }
+  | {
+      kind: 'reference-file';
+      sourceAlias: string;
+      packName: string;
+      guidelineName: string;
+      usage?: string;
+      filePath: string;
+      content: string;
+      reference: string;
     };
 
 export type ManagedBlock = {
   filePath: string;
   fragments: string[];
+  references: string[];
 };
 
 export type ToolPlan = {

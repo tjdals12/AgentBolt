@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import type { GuidelineSelection } from '#catalog/config/schema.js';
 
+import { DEFAULT_GUIDELINE_USAGE } from '../reference.js';
 import { Adapter } from './adapter.js';
 import { type RenderedAgent, type RenderedGuideline, type RenderedSkill } from '../model.js';
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
@@ -58,7 +59,30 @@ export class OpenCodeAdapter extends Adapter {
     guideline: Guideline,
     guidelineSelection: GuidelineSelection,
   ): RenderedGuideline {
-    const { name: guidelineName, description, body } = guideline;
+    const { name: guidelineName, description, body, usage } = guideline;
+
+    if (guidelineSelection.load === 'reference') {
+      const guidelineUsage = guidelineSelection.usage ?? usage;
+      const installName = this.buildInstallName(sourceAlias, packName, guidelineName);
+      const filePath = path.join(guidelineSelection.path, `${installName}.md`);
+      const linkPath = filePath;
+      const linkPathSegments = linkPath.split(path.sep);
+      const encodedLinkPathSegments = linkPathSegments.map((segment) =>
+        encodeURIComponent(segment),
+      );
+      const link = encodedLinkPathSegments.join('/');
+
+      return {
+        kind: 'reference-file',
+        sourceAlias,
+        packName,
+        guidelineName,
+        usage: guidelineUsage,
+        filePath,
+        content: body,
+        reference: `- [${guidelineName}](${link}): ${guidelineUsage ?? DEFAULT_GUIDELINE_USAGE}`,
+      };
+    }
 
     const sourceTag = `<!-- bolt: ${sourceAlias}/${packName}/${guidelineName} - ${description} -->`;
 
@@ -79,6 +103,7 @@ export class OpenCodeAdapter extends Adapter {
       sourceAlias,
       packName,
       guidelineName,
+      usage,
       fragment,
     };
   }

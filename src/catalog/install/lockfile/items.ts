@@ -20,7 +20,7 @@ export function collectInstalledItems(toolPlans: ToolPlan[]): InstalledItems {
     }
 
     for (const renderedGuideline of renderedGuidelines) {
-      if (renderedGuideline.kind === 'rule-file') {
+      if (renderedGuideline.kind === 'rule-file' || renderedGuideline.kind === 'reference-file') {
         const { packName, guidelineName, filePath } = renderedGuideline;
         items.push({ label: `${packName}/${guidelineName}`, path: filePath });
       }
