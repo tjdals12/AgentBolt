@@ -1,3 +1,9 @@
+# [1.5.0-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.4.0...v1.5.0-next.1) (2026-10-17)
+
+### Features
+
+- support reference guideline installation ([#12](https://github.com/tjdals12/AgentBolt/issues/12)) ([2a7df36](https://github.com/tjdals12/AgentBolt/commit/2a7df36d57be35769b330b9f59f25eece4573cdb))
+
 # [1.4.0](https://github.com/tjdals12/AgentBolt/compare/v1.3.0...v1.4.0) (2026-08-31)
 
 ### Features
