@@ -25,10 +25,18 @@ export function renderNewGuidelineResult(result: NewItemResult, projectPath: str
   }
 
   console.log('');
+  console.log(chalk.dim('Required content — edit the generated files:'));
+  console.log(
+    `  ${chalk.bold('usage')}  ${chalk.dim('in guideline.json, describe when to read this guideline')}`,
+  );
+  console.log(`  ${chalk.bold('body')}  ${chalk.dim('write the guideline in content.md')}`);
+
+  console.log('');
   console.log(chalk.dim('Optional settings — edit guideline.json:'));
   console.log(
-    `  ${chalk.bold('recommended')}  ${chalk.dim('load only on matching files, e.g. { "load": "conditional", "glob": ["**/*.ts"] }')}`,
+    `  ${chalk.bold('recommended')}  ${chalk.dim('reference a separate file, e.g. { "load": "reference", "path": "docs/guidelines" }')}`,
   );
+  console.log(chalk.dim('  path is an installation directory relative to the project root'));
 
   console.log('');
   console.log(chalk.dim('Next, fill in the guideline, then validate:'));

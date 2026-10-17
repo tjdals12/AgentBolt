@@ -30,6 +30,7 @@ function makeGuideline(overrides: Partial<Guideline> = {}): Guideline {
   return {
     name: 'commit-rules',
     description: 'Commit conventions',
+    usage: 'Read before writing a commit.',
     recommended: { load: 'always' },
     body: 'Write good commits.',
     bodyPath: '/catalog/packs/pack/guidelines/commit-rules/body.md',

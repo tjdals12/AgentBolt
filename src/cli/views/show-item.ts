@@ -66,10 +66,18 @@ function printToolConfig(style: ItemStyle, toolConfig: ToolConfig | undefined) {
   }
 }
 
-function printAppliesTo(style: ItemStyle, recommended: GuidelineRecommendation): void {
-  printSectionHeader(style, 'applies to', { note: 'recommended' });
-  const value = recommended.load === 'always' ? 'all files' : recommended.glob.join(', ');
-  console.log(chalk.dim(`  ${value}`));
+function printRecommendation(style: ItemStyle, recommended: GuidelineRecommendation): void {
+  printSectionHeader(style, 'recommended');
+  console.log(chalk.dim(`  ${recommended.load}`));
+
+  if (recommended.load === 'conditional') {
+    const globPatterns = recommended.glob.join(', ');
+    console.log(chalk.dim(`  glob: ${globPatterns}`));
+  }
+
+  if (recommended.load === 'reference') {
+    console.log(chalk.dim(`  path: ${recommended.path}`));
+  }
 }
 
 function printSkill(
@@ -120,17 +128,20 @@ function printGuideline(
   breadcrumb: string,
   guideline: Extract<ShownItem, { type: 'guidelines' }>,
 ) {
-  const { name, description, recommended, body } = guideline;
+  const { name, description, usage, recommended, body } = guideline;
 
   printHeader(style, breadcrumb, name);
 
   printSectionHeader(style, 'description');
   printWrapped(description, 2);
 
+  printSectionHeader(style, 'usage');
+  printWrapped(usage ?? '(not specified)', 2);
+
   printSectionHeader(style, 'body');
   printIndentedBody(body);
 
-  printAppliesTo(style, recommended);
+  printRecommendation(style, recommended);
 }
 
 export function renderShowItemResult(result: ShowItemResult): void {

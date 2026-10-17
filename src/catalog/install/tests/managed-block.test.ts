@@ -6,7 +6,7 @@ import {
   replaceManagedBlock,
 } from '#catalog/install/managed-block/render.js';
 import { groupManagedBlocksByFile } from '#catalog/install/managed-block/group.js';
-import type { ToolPlan } from '#catalog/install/model.js';
+import type { ManagedBlock, ToolPlan } from '#catalog/install/model.js';
 import type { ToolId } from '#catalog/tool/model.js';
 
 const START = '<!-- bolt:start -->';
@@ -73,7 +73,7 @@ describe('buildManagedBlockContent', () => {
 });
 
 describe('groupManagedBlocksByFile', () => {
-  function plan(tool: ToolId, managedBlock?: { filePath: string; fragments: string[] }): ToolPlan {
+  function plan(tool: ToolId, managedBlock?: ManagedBlock): ToolPlan {
     return {
       tool,
       renderedSkills: [],
@@ -85,21 +85,21 @@ describe('groupManagedBlocksByFile', () => {
 
   it('collapses tools sharing a file into one block, recording every contributor (U-MB-7)', () => {
     const plans = [
-      plan('codex', { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'] }),
-      plan('claude', { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'] }),
+      plan('cursor', { filePath: 'AGENTS.md', fragments: ['frag-a'], references: [] }),
+      plan('codex', { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'], references: [] }),
     ];
 
     const result = groupManagedBlocksByFile(plans);
 
     expect(result).toEqual([
-      { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'], tools: ['codex', 'claude'] },
+      { filePath: 'AGENTS.md', fragments: ['frag-a', 'frag-b'], tools: ['cursor', 'codex'] },
     ]);
   });
 
   it('keeps blocks for different files separate (U-MB-8)', () => {
     const plans = [
-      plan('codex', { filePath: 'AGENTS.md', fragments: ['frag-a'] }),
-      plan('claude', { filePath: 'CLAUDE.md', fragments: ['frag-b'] }),
+      plan('codex', { filePath: 'AGENTS.md', fragments: ['frag-a'], references: [] }),
+      plan('claude', { filePath: 'CLAUDE.md', fragments: ['frag-b'], references: [] }),
     ];
 
     const result = groupManagedBlocksByFile(plans);
@@ -108,7 +108,10 @@ describe('groupManagedBlocksByFile', () => {
   });
 
   it('skips tools that have no managed block (U-MB-9)', () => {
-    const plans = [plan('codex'), plan('claude', { filePath: 'AGENTS.md', fragments: ['frag-a'] })];
+    const plans = [
+      plan('codex'),
+      plan('claude', { filePath: 'AGENTS.md', fragments: ['frag-a'], references: [] }),
+    ];
 
     const result = groupManagedBlocksByFile(plans);
 

@@ -72,15 +72,15 @@ If the instructions file (e.g. `AGENTS.md`) doesn't exist yet, AgentBolt creates
 
 AgentBolt installs each item into the location its target agent expects.
 
-| Agent          | `--tools`  | Skills              | Subagents           | Guidelines                  |
-| -------------- | ---------- | ------------------- | ------------------- | --------------------------- |
-| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `.claude/rules/`            |
-| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (managed block) |
-| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `.cursor/rules/`            |
-| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/instructions/`     |
-| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (managed block) |
+| Agent          | `--tools`  | Skills              | Subagents           | Guidelines                        |
+| -------------- | ---------- | ------------------- | ------------------- | --------------------------------- |
+| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `CLAUDE.md`                       |
+| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (managed block)       |
+| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `AGENTS.md`                       |
+| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/copilot-instructions.md` |
+| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (managed block)       |
 
-Codex and OpenCode both read the shared `AGENTS.md`, so enabling both puts their guidelines in a single managed block in that one file.
+Codex, OpenCode, and Cursor all read the shared `AGENTS.md`, so enabling them together puts their guidelines in a single managed block in that one file.
 
 ## Getting started
 
@@ -456,6 +456,80 @@ location:    .
 ...
 ```
 
+Each item consists of a JSON metadata file and a Markdown body. The metadata defines its name, description, body path, and type-specific settings.
+
+**Skill — `skill.json`**
+
+```jsonc
+{
+  // item identifier (kebab-case, matching the item directory name)
+  "name": "create-commit",
+  // item description
+  "description": "Write commit messages and create commits",
+  // body file path (relative to the item directory)
+  "instructions": "./instructions.md",
+  // optional: files and directories to install alongside the body. Defaults to []
+  "assets": ["references/"],
+  // optional: additional settings to include in each agent's installed file
+  "toolConfig": {
+    "claude": {
+      "disable-model-invocation": true,
+    },
+  },
+}
+```
+
+**Subagent — `agent.json`**
+
+```jsonc
+{
+  // item identifier (kebab-case, matching the item directory name)
+  "name": "code-reviewer",
+  // item description
+  "description": "Review code quality and maintainability",
+  // body file path (relative to the item directory)
+  "instructions": "./prompt.md",
+  // optional: additional settings to include in each agent's installed file
+  "toolConfig": {
+    "claude": {
+      "model": "opus",
+    },
+  },
+}
+```
+
+**Guideline — `guideline.json`**
+
+```jsonc
+{
+  // item identifier (kebab-case, matching the item directory name)
+  "name": "commit-rules",
+  // description for browsing the catalog
+  "description": "Commit message conventions",
+  // body file path (relative to the item directory)
+  "body": "./content.md",
+  // text to insert alongside the guideline link in the instructions file
+  // required when recommended.load is reference
+  "usage": "Read and follow these guidelines before writing a commit message.",
+  // recommended installation settings used as defaults
+  "recommended": {
+    // insert the body directly into the instructions file.
+    "load": "always",
+
+    // install the body as a separate file and add a link and usage to the instructions file.
+    "load": "reference",
+    // installation directory (relative to the project root)
+    "path": "docs/guidelines",
+
+    // apply when working on files matching the glob patterns.
+    // Recommended for Claude, Cursor, and Copilot.
+    "load": "conditional",
+    // file patterns to match
+    "glob": ["src/**/*.ts"],
+  },
+}
+```
+
 ### Validate the catalog
 
 Use `catalog validate` to check the catalog — that manifests match the schema, that body and asset files are all present, that names line up with their directories, and so on.
@@ -535,6 +609,10 @@ packs:
         # always: applied at all times
         commit-rules:
           load: always
+        # reference: consulted when needed
+        review-guidelines:
+          load: reference
+          path: docs/guidelines
         # conditional: applied only to files matching the glob
         react-conventions:
           load: conditional

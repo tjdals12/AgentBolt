@@ -105,14 +105,25 @@ agent-bolt list-items --source=common --packs=common --json
               {
                 "name": "commit-rules",
                 "description": "Commit message conventions and granularity for this project.",
+                "usage": "Read before writing a commit message.",
                 "recommended": { "load": "always" }
               },
               {
                 "name": "typescript-standards",
                 "description": "Project-wide TypeScript coding standards: …",
+                "usage": "Read before editing TypeScript code.",
                 "recommended": {
                   "load": "conditional",
                   "glob": ["**/*.ts", "**/*.tsx"]
+                }
+              },
+              {
+                "name": "review-guidelines",
+                "description": "Code review conventions",
+                "usage": "Read before reviewing code.",
+                "recommended": {
+                  "load": "reference",
+                  "path": "docs/guidelines"
                 }
               }
             ]
@@ -125,8 +136,11 @@ agent-bolt list-items --source=common --packs=common --json
 }
 ```
 
-- Guidelines carry `recommended` — the load mode `add-pack`/`add-item` will
-  write into the config.
+- Guidelines carry `recommended` — the installation settings
+  `add-pack`/`add-item` will write into the config — and optional `usage`,
+  the text inserted alongside the guideline link when installed as a reference.
+  Missing `usage` is omitted from JSON; reference rendering uses a fallback
+  message, and sync warns about the missing author-provided text.
 - Unlike `list-packs`, a broken source fails the whole command (top-level
   `error`, exit 1).
 
@@ -157,7 +171,9 @@ agent-bolt show-item --source=common --pack=common --item=create-commit --json
 ```
 
 - `type` is `skill`, `agent`, or `guideline`. `instructions` is the full body
-  — it can be long. `assets` lists extra files a skill ships with.
+  for skills and agents — it can be long. Guidelines return `body`,
+  `bodyPath`, optional `usage`, and `recommended` instead. `assets` lists extra files
+  a skill ships with.
 
 ## add-pack
 

@@ -1,7 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { ITEM_TYPES, type Item, type ItemType } from '#catalog/content/item/model.js';
+import {
+  ITEM_TYPES,
+  type Agent,
+  type Guideline,
+  type ItemType,
+  type Skill,
+} from '#catalog/content/item/model.js';
 import {
   AGENTS_DIR_NAME,
   CATALOG_MANIFEST_FILENAME,
@@ -167,22 +173,18 @@ export class ValidateCatalogCommand {
 
     let typeDir: string;
     let manifestFileName: string;
-    let findItem: (catalogDir: string, packName: string, itemName: string) => Item | null;
     switch (itemType) {
       case 'skills':
         typeDir = path.join(packDir, SKILLS_DIR_NAME);
         manifestFileName = SKILL_MANIFEST_FILENAME;
-        findItem = findSkill;
         break;
       case 'agents':
         typeDir = path.join(packDir, AGENTS_DIR_NAME);
         manifestFileName = AGENT_MANIFEST_FILENAME;
-        findItem = findAgent;
         break;
       case 'guidelines':
         typeDir = path.join(packDir, GUIDELINES_DIR_NAME);
         manifestFileName = GUIDELINE_MANIFEST_FILENAME;
-        findItem = findGuideline;
         break;
     }
 
@@ -193,7 +195,26 @@ export class ValidateCatalogCommand {
     for (const itemDir of itemDirs) {
       const itemName = path.basename(itemDir);
       try {
-        const item = findItem(catalogDir, packName, itemName);
+        let item: Skill | Agent | Guideline | null;
+        if (itemType === 'guidelines') {
+          item = findGuideline(catalogDir, packName, itemName);
+
+          if (item !== null) {
+            if (item.recommended.load === 'reference' && item.usage === undefined) {
+              itemValidationIssues.push({
+                severity: 'error',
+                location: path.relative(catalogDir, path.join(itemDir, manifestFileName)),
+                message:
+                  "Missing required field 'usage' for recommended.load 'reference'.\nDescribe when an agent should read this guideline.",
+              });
+            }
+          }
+        } else if (itemType === 'skills') {
+          item = findSkill(catalogDir, packName, itemName);
+        } else {
+          item = findAgent(catalogDir, packName, itemName);
+        }
+
         if (item === null) {
           itemValidationIssues.push({
             severity: 'error',

@@ -29,10 +29,12 @@ export const AgentManifestSchema = ItemManifestSchema.extend({
 export const GuidelineRecommendationSchema = z.discriminatedUnion('load', [
   z.object({ load: z.literal('always') }),
   z.object({ load: z.literal('conditional'), glob: z.array(z.string()).min(1) }),
+  z.object({ load: z.literal('reference'), path: z.string().trim().min(1) }),
 ]);
 export const GuidelineManifestSchema = ItemManifestSchema.extend({
   recommended: GuidelineRecommendationSchema,
   body: z.string(),
+  usage: z.string().min(1).optional(),
 });
 
 export type ItemManifest = z.infer<typeof ItemManifestSchema>;
