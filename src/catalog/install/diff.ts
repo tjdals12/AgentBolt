@@ -120,7 +120,7 @@ export function diffPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet 
     }
   }
 
-  const removed = findOrphans(previousItems, currentItems);
+  const removed = findOrphans(projectPath, previousItems, currentItems);
   const removedItemsByTool = Object.entries(removed);
   for (const [tool, removedItems] of removedItemsByTool) {
     const syncChanges = removedItems.map<SyncChange>((removedItem) => ({

@@ -149,7 +149,7 @@ export function applyPlan(projectPath: string, toolPlans: ToolPlan[]): ChangeSet
     }
   }
 
-  const removed = findOrphans(previousItems, currentItems);
+  const removed = findOrphans(projectPath, previousItems, currentItems);
   for (const items of Object.values(removed)) {
     for (const item of items) {
       fs.rmSync(path.join(projectPath, item.path), { recursive: true, force: true });

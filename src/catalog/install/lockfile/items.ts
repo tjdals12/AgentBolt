@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import type { ToolPlan } from '../model.js';
 import type { InstalledItem, InstalledItems } from './model.js';
 
@@ -32,16 +35,32 @@ export function collectInstalledItems(toolPlans: ToolPlan[]): InstalledItems {
   return byTool;
 }
 
-export function findOrphans(previous: InstalledItems, current: InstalledItems): InstalledItems {
+function resolveInstalledPath(projectPath: string, itemPath: string): string {
+  const absolutePath = path.resolve(projectPath, itemPath);
+  const target = fs.statSync(absolutePath, { throwIfNoEntry: false });
+
+  if (!target) return absolutePath;
+
+  return fs.realpathSync(absolutePath);
+}
+
+export function findOrphans(
+  projectPath: string,
+  previous: InstalledItems,
+  current: InstalledItems,
+): InstalledItems {
   const currentPaths = new Set(
     Object.values(current)
       .flat()
-      .map((item) => item.path),
+      .map((item) => resolveInstalledPath(projectPath, item.path)),
   );
 
   const orphansByTool: InstalledItems = {};
   for (const [tool, items] of Object.entries(previous)) {
-    const orphans = items.filter((item) => !currentPaths.has(item.path));
+    const orphans = items.filter((item) => {
+      const installedPath = resolveInstalledPath(projectPath, item.path);
+      return !currentPaths.has(installedPath);
+    });
     if (orphans.length > 0) {
       orphansByTool[tool] = orphans;
     }

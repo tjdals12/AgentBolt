@@ -571,6 +571,69 @@ describe('reference guidelines (integration)', () => {
     expect(new CheckCommand().execute(project.projectPath).drifted).toBe(false);
   });
 
+  it.each([
+    { previousPath: 'docs', nextPath: 'policies' },
+    { previousPath: 'policies', nextPath: 'docs' },
+  ])(
+    'preserves the reference body when switching from $previousPath to $nextPath',
+    ({ previousPath, nextPath }) => {
+      const previousConfig: ConfigSpec = {
+        ...REFERENCE_CONFIG,
+        packs: {
+          dev: {
+            demo: {
+              guidelines: {
+                rules: { load: 'reference', path: previousPath },
+              },
+            },
+          },
+        },
+      };
+      const project = setup(REFERENCE_CATALOG, previousConfig);
+      const docsPath = path.join(project.projectPath, 'docs');
+      const policiesPath = path.join(project.projectPath, 'policies');
+
+      fs.mkdirSync(docsPath);
+      fs.symlinkSync(docsPath, policiesPath, 'dir');
+      sync(project);
+
+      const nextConfig: ConfigSpec = {
+        ...previousConfig,
+        packs: {
+          dev: {
+            demo: {
+              guidelines: {
+                rules: { load: 'reference', path: nextPath },
+              },
+            },
+          },
+        },
+      };
+      writeConfig(project.projectPath, nextConfig);
+
+      const checkCommand = new CheckCommand();
+      const beforeSync = checkCommand.execute(project.projectPath);
+      sync(project);
+
+      const referencePath = `${nextPath}/bolt-dev-demo-rules.md`;
+      expect(project.read(referencePath)).toBe('# Detailed rules\n');
+
+      const checkOutput = checkCommand.toJson(beforeSync);
+      const changes = checkOutput.tools.flatMap(({ changes }) => changes);
+      expect(changes).not.toContainEqual(
+        expect.objectContaining({ label: 'demo/rules', status: 'orphaned' }),
+      );
+
+      const expectedLink = `[rules](${referencePath})`;
+      for (const file of ['CLAUDE.md', 'AGENTS.md']) {
+        expect(project.read(file)).toContain(expectedLink);
+      }
+
+      const afterSync = checkCommand.execute(project.projectPath);
+      expect(afterSync.drifted).toBe(false);
+    },
+  );
+
   it('handles path changes, shared ownership, mode changes, and final reference removal', () => {
     const project = setup(REFERENCE_CATALOG, REFERENCE_CONFIG);
     sync(project);
