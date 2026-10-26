@@ -13,6 +13,11 @@ const NameSchema = z
 export const GuidelineSelectionSchema = z.discriminatedUnion('load', [
   z.object({ load: z.literal('always') }),
   z.object({ load: z.literal('conditional'), glob: z.array(z.string()).min(1) }),
+  z.object({
+    load: z.literal('reference'),
+    path: z.string().trim().min(1),
+    usage: z.string().min(1).optional(),
+  }),
 ]);
 
 export const PackSelectionSchema = z.object({

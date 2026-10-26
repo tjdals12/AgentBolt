@@ -131,11 +131,12 @@ export class ShowItemCommand {
           }
 
           case 'guidelines': {
-            const { name, description, recommended, body, bodyPath } = item;
+            const { name, description, usage, recommended, body, bodyPath } = item;
             return {
               type: 'guideline',
               name,
               description,
+              usage,
               recommended,
               body,
               bodyPath,

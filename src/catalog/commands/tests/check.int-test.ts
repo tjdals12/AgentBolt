@@ -1,4 +1,6 @@
 import { afterEach, describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { SyncCommand } from '#catalog/commands/sync.js';
 import { CheckCommand } from '#catalog/commands/check.js';
@@ -24,7 +26,13 @@ const CATALOG: CatalogSpec = {
     demo: {
       skills: { greet: { instructions: 'Say hi.' }, farewell: { instructions: 'Say bye.' } },
       agents: { reviewer: { instructions: 'Review.' } },
-      guidelines: { rules: { body: 'Be nice.', recommended: { load: 'always' } } },
+      guidelines: {
+        rules: {
+          body: 'Be nice.',
+          usage: 'Read before editing code.',
+          recommended: { load: 'always' },
+        },
+      },
     },
   },
 };
@@ -32,7 +40,7 @@ const CATALOG: CatalogSpec = {
 interface Selection {
   skills?: string[];
   agents?: string[];
-  guidelines?: Record<string, { load: 'always' }>;
+  guidelines?: Record<string, { load: 'always' } | { load: 'reference'; path: string }>;
 }
 
 function config(selection: Selection): ConfigSpec {
@@ -66,6 +74,41 @@ function claudeChanges(project: TempProject) {
 }
 
 describe('check (integration)', () => {
+  it('detects reference body and list drift without changing files or the lock', () => {
+    const project = setup({ guidelines: { rules: { load: 'reference', path: 'docs' } } });
+    new SyncCommand().execute(project.projectPath);
+    const lockBefore = project.read('.agent-bolt/install-lock.json');
+    const lockMtime = project.mtimeMs('.agent-bolt/install-lock.json');
+    project.write('docs/bolt-dev-demo-rules.md', 'Edited body.');
+    project.write(
+      'CLAUDE.md',
+      project.read('CLAUDE.md').replace('Read before editing code.', 'Edited usage.'),
+    );
+    const instructionsBefore = project.read('CLAUDE.md');
+
+    const result = check(project);
+    expect(result.drifted).toBe(true);
+    expect(result.checkResult[0]?.changes).toEqual(
+      expect.arrayContaining([
+        { source: 'dev', label: 'demo/rules', status: 'updated' },
+        { source: null, label: 'CLAUDE.md (managed block)', status: 'updated' },
+      ]),
+    );
+    expect(project.read('docs/bolt-dev-demo-rules.md')).toBe('Edited body.');
+    expect(project.read('CLAUDE.md')).toBe(instructionsBefore);
+
+    const referenceFilePath = path.join(project.projectPath, 'docs/bolt-dev-demo-rules.md');
+    fs.unlinkSync(referenceFilePath);
+    expect(claudeChanges(project)).toContainEqual({
+      source: 'dev',
+      label: 'demo/rules',
+      status: 'installed',
+    });
+    expect(project.exists('docs/bolt-dev-demo-rules.md')).toBe(false);
+    expect(project.read('.agent-bolt/install-lock.json')).toBe(lockBefore);
+    expect(project.mtimeMs('.agent-bolt/install-lock.json')).toBe(lockMtime);
+  });
+
   it('reports clean immediately after a sync (E3)', () => {
     const project = setup();
     new SyncCommand().execute(project.projectPath);

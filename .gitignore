@@ -143,6 +143,7 @@ vite.config.ts.timestamp-*
 .vite/
 
 .agent-bolt/
+/docs/
 .claude/
 .codex/
 .cursor/

@@ -1,4 +1,4 @@
-import type { GuidelineRecommendation, ToolConfig } from './schema.js';
+import type { GuidelineManifest, ToolConfig } from './schema.js';
 
 export type ItemType = 'skills' | 'agents' | 'guidelines';
 export const ITEM_TYPES = ['skills', 'agents', 'guidelines'] as const satisfies ItemType[];
@@ -8,7 +8,7 @@ export type Item = {
   description: string;
 };
 
-export type GuidelineItem = Item & { recommended: GuidelineRecommendation };
+export type GuidelineItem = Item & Pick<GuidelineManifest, 'recommended' | 'usage'>;
 
 export type Skill = Item & {
   toolConfig?: ToolConfig;

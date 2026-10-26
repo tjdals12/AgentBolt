@@ -129,6 +129,7 @@ export function findGuideline(
     name: manifest.name,
     description: manifest.description,
     recommended: manifest.recommended,
+    usage: manifest.usage,
     body,
     bodyPath,
   };

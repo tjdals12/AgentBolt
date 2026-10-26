@@ -72,15 +72,15 @@ Run `agent-bolt sync` to update it.
 
 AgentBolt는 각 아이템을 대상 에이전트가 기대하는 위치에 설치합니다.
 
-| 에이전트       | `--tools`  | 스킬                | 서브 에이전트       | 가이드라인              |
-| -------------- | ---------- | ------------------- | ------------------- | ----------------------- |
-| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `.claude/rules/`        |
-| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (관리 블록) |
-| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `.cursor/rules/`        |
-| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/instructions/` |
-| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (관리 블록) |
+| 에이전트       | `--tools`  | 스킬                | 서브 에이전트       | 가이드라인                        |
+| -------------- | ---------- | ------------------- | ------------------- | --------------------------------- |
+| Claude Code    | `claude`   | `.claude/skills/`   | `.claude/agents/`   | `CLAUDE.md`                       |
+| Codex          | `codex`    | `.codex/skills/`    | `.codex/agents/`    | `AGENTS.md` (관리 블록)           |
+| Cursor         | `cursor`   | `.cursor/skills/`   | `.cursor/agents/`   | `AGENTS.md`                       |
+| GitHub Copilot | `copilot`  | `.github/skills/`   | `.github/agents/`   | `.github/copilot-instructions.md` |
+| OpenCode       | `opencode` | `.opencode/skills/` | `.opencode/agents/` | `AGENTS.md` (관리 블록)           |
 
-Codex와 OpenCode는 같은 `AGENTS.md`를 읽기 때문에, 둘 다 사용하면 두 에이전트의 가이드라인이 그 한 파일의 관리 블록에 함께 담깁니다.
+Codex와 OpenCode, Cursor는 같은 `AGENTS.md`를 읽기 때문에, 함께 사용하면 각 에이전트의 가이드라인이 그 한 파일의 관리 블록에 함께 담깁니다.
 
 ## 시작하기
 
@@ -456,6 +456,80 @@ location:    .
 ...
 ```
 
+각 아이템은 JSON 메타데이터 파일과 Markdown 본문으로 구성됩니다. 메타데이터에는 아이템의 이름·설명·본문 경로와 타입별 설정을 작성합니다.
+
+**스킬 — `skill.json`**
+
+```jsonc
+{
+  // 아이템 식별자 (아이템 디렉터리명과 같은 kebab-case)
+  "name": "create-commit",
+  // 아이템 설명
+  "description": "커밋 메시지 작성과 커밋 실행",
+  // 본문 파일 경로 (아이템 디렉터리 기준)
+  "instructions": "./instructions.md",
+  // 선택: 함께 설치할 파일·디렉터리. 생략하면 []
+  "assets": ["references/"],
+  // 선택: 각 에이전트의 설치 파일에 반영할 추가 설정
+  "toolConfig": {
+    "claude": {
+      "disable-model-invocation": true,
+    },
+  },
+}
+```
+
+**서브 에이전트 — `agent.json`**
+
+```jsonc
+{
+  // 아이템 식별자 (아이템 디렉터리명과 같은 kebab-case)
+  "name": "code-reviewer",
+  // 아이템 설명
+  "description": "코드 품질과 유지보수성 검토",
+  // 본문 파일 경로 (아이템 디렉터리 기준)
+  "instructions": "./prompt.md",
+  // 선택: 각 에이전트의 설치 파일에 반영할 추가 설정
+  "toolConfig": {
+    "claude": {
+      "model": "opus",
+    },
+  },
+}
+```
+
+**가이드라인 — `guideline.json`**
+
+```jsonc
+{
+  // 아이템 식별자 (아이템 디렉터리명과 같은 kebab-case)
+  "name": "commit-rules",
+  // 카탈로그 탐색용 설명
+  "description": "커밋 메시지 작성 규칙",
+  // 본문 파일 경로 (아이템 디렉터리 기준)
+  "body": "./content.md",
+  // 지침 파일에 가이드라인 링크와 함께 삽입할 문구
+  // recommended.load가 reference이면 필수
+  "usage": "커밋 메시지를 작성하기 전에 읽고 따르세요.",
+  // 기본값으로 사용되는 권장 설치 설정
+  "recommended": {
+    // 본문을 지침 파일에 직접 삽입합니다.
+    "load": "always",
+
+    // 본문을 별도 파일로 설치하고 지침 파일에 링크와 usage를 기록합니다.
+    "load": "reference",
+    // 설치 디렉터리 (프로젝트 루트 기준)
+    "path": "docs/guidelines",
+
+    // glob 패턴에 해당하는 파일을 작업할 때 적용합니다.
+    // Claude, Cursor, Copilot에서 권장합니다.
+    "load": "conditional",
+    // 적용할 파일 패턴
+    "glob": ["src/**/*.ts"],
+  },
+}
+```
+
 ### 카탈로그 검증하기
 
 `catalog validate`로 카탈로그를 검사합니다. 매니페스트가 스키마에 맞는지, 본문과 에셋 파일이 모두 있는지, 이름과 디렉터리가 일치하는지 등을 확인합니다.
@@ -535,6 +609,10 @@ packs:
         # always: 항상 적용
         commit-rules:
           load: always
+        # reference: 필요할 때 참조
+        review-guidelines:
+          load: reference
+          path: docs/guidelines
         # conditional: glob 패턴의 파일에만 적용
         react-conventions:
           load: conditional

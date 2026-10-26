@@ -4,7 +4,7 @@
 get installed for which tools. It is normally managed through the CLI
 (`init`, `add-*`, `remove-*`). Two changes have no command and are made by
 hand: editing `sources` — adding, changing, or removing a catalog after init
-— and changing a guideline's `load`/`glob` (the CLI always writes the
+— and changing a guideline's `load`/`glob`/`path` (the CLI always writes the
 catalog's recommended value).
 
 After any hand edit, run `agent-bolt sync` (with the user's approval) to apply
@@ -48,6 +48,10 @@ packs:
         # always: applied at all times
         commit-rules:
           load: always
+        # reference: consulted when needed
+        review-guidelines:
+          load: reference
+          path: docs/guidelines
         # conditional: applied only to files matching the globs
         prisma-schema:
           load: conditional
@@ -72,13 +76,17 @@ Selection per pack:
 | `agents`     | Array of item names. Optional; defaults to `[]`          |
 | `guidelines` | Map of item name → load mode. Optional; defaults to `{}` |
 
-Guideline load modes (`load` is a discriminator — exactly one shape or the
-other):
+Guideline load modes (`load` is a discriminator — choose one of these shapes):
 
 ```yaml
 # Applied at all times
 some-guideline:
   load: always
+
+# Consulted when needed (installation directory required)
+review-guidelines:
+  load: reference
+  path: docs/guidelines
 
 # Applied only to files matching the globs (at least one glob required)
 other-guideline:
@@ -93,6 +101,8 @@ other-guideline:
   hyphens (`^[a-z0-9]+(?:-[a-z0-9]+)*$`).
 - A local source `path` is resolved relative to the `.agent-bolt/` directory.
   A catalog at `<project>/.agent-bolt/catalog` is `path: ./catalog`.
+- A reference guideline's `path` is an installation directory relative to
+  the project root. Use `.` for the project root itself.
 - A pack selection whose source alias is missing from `sources` is pruned the
   next time the config is rewritten (reported as `orphanedSources` by `init`).
 - Renaming a source alias or a pack changes every installed file's name

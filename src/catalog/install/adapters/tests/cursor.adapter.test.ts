@@ -30,6 +30,7 @@ function makeGuideline(overrides: Partial<Guideline> = {}): Guideline {
   return {
     name: 'commit-rules',
     description: 'Commit conventions',
+    usage: 'Read before writing a commit.',
     recommended: { load: 'always' },
     body: 'Write good commits.',
     bodyPath: '/catalog/packs/pack/guidelines/commit-rules/body.md',
@@ -48,19 +49,16 @@ function parseFrontmatter(content: string): Record<string, unknown> {
 describe('CursorAdapter.renderGuideline', () => {
   const adapter = new CursorAdapter();
 
-  it('maps an always guideline to alwaysApply true without globs (U-CURSOR-1)', () => {
+  it('renders an always guideline as an AGENTS.md block fragment (U-CURSOR-1)', () => {
     const rendered = adapter.renderGuideline('src', 'pack', makeGuideline(), { load: 'always' });
 
-    if (rendered.kind !== 'rule-file') {
-      throw new Error('expected a rule-file guideline');
+    if (rendered.kind !== 'block-fragment') {
+      throw new Error('expected a block-fragment guideline');
     }
-    expect(rendered.filePath).toBe('.cursor/rules/bolt-src-pack-commit-rules.mdc');
-
-    const frontmatter = parseFrontmatter(rendered.content);
-    expect(frontmatter.alwaysApply).toBe(true);
-    expect(frontmatter.globs).toBeUndefined();
-    expect(frontmatter.description).toBe('Commit conventions');
-    expect(rendered.content.endsWith('Write good commits.\n')).toBe(true);
+    expect(adapter.managedBlockFile).toBe('AGENTS.md');
+    expect(rendered.fragment).toBe(
+      '<!-- bolt: src/pack/commit-rules - Commit conventions -->\n\nWrite good commits.',
+    );
   });
 
   it('serializes conditional globs unquoted and comma-joined without spaces (U-CURSOR-2)', () => {

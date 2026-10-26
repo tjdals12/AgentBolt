@@ -5,6 +5,7 @@ import type { GuidelineSelection } from '#catalog/config/schema.js';
 import type { Agent, Guideline, Skill } from '#catalog/content/item/model.js';
 
 import type { RenderedSkill, RenderedAgent, RenderedGuideline } from '../model.js';
+import { DEFAULT_GUIDELINE_USAGE } from '../reference.js';
 import { Adapter } from './adapter.js';
 
 export class CodexAdapter extends Adapter {
@@ -70,7 +71,30 @@ export class CodexAdapter extends Adapter {
     guideline: Guideline,
     guidelineSelection: GuidelineSelection,
   ): RenderedGuideline {
-    const { name: guidelineName, description, body } = guideline;
+    const { name: guidelineName, description, body, usage } = guideline;
+
+    if (guidelineSelection.load === 'reference') {
+      const guidelineUsage = guidelineSelection.usage ?? usage;
+      const installName = this.buildInstallName(sourceAlias, packName, guidelineName);
+      const filePath = path.join(guidelineSelection.path, `${installName}.md`);
+      const linkPath = filePath;
+      const linkPathSegments = linkPath.split(path.sep);
+      const encodedLinkPathSegments = linkPathSegments.map((segment) =>
+        encodeURIComponent(segment),
+      );
+      const link = encodedLinkPathSegments.join('/');
+
+      return {
+        kind: 'reference-file',
+        sourceAlias,
+        packName,
+        guidelineName,
+        usage: guidelineUsage,
+        filePath,
+        content: body,
+        reference: `- [${guidelineName}](${link}): ${guidelineUsage ?? DEFAULT_GUIDELINE_USAGE}`,
+      };
+    }
 
     const sourceTag = `<!-- bolt: ${sourceAlias}/${packName}/${guidelineName} - ${description} -->`;
 
@@ -91,6 +115,7 @@ export class CodexAdapter extends Adapter {
       sourceAlias,
       packName,
       guidelineName,
+      usage,
       fragment,
     };
   }

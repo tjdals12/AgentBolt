@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 
 import type { SyncResult } from '#catalog/commands/sync.js';
+import { ConsoleOutput } from '#core/output.js';
 
 import { Banner } from './shared/banner.js';
 import {
@@ -17,17 +18,23 @@ const STATUS_STYLES: StatusStyles = {
 };
 
 export function renderSyncResult(result: SyncResult): void {
-  const counts = countChanges(result);
+  const { toolSyncResults, warnings } = result;
+  const counts = countChanges(toolSyncResults);
   const changed = counts.total > 0;
 
   Banner.sync(changed);
 
-  for (const toolSyncResult of result) {
+  for (const toolSyncResult of toolSyncResults) {
     printToolReport(toolSyncResult, STATUS_STYLES);
   }
 
   if (changed) {
     console.log('');
     console.log(changeSummary(counts, STATUS_STYLES));
+  }
+
+  for (const warning of warnings) {
+    console.error('');
+    ConsoleOutput.warn(warning);
   }
 }

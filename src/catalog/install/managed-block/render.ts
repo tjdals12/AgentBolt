@@ -19,6 +19,10 @@ export function buildManagedBlock(content: string): string {
   return `${START_MARKER}\n${HEADER}\n${content}\n${END_MARKER}`;
 }
 
+export function isManagedBlockPresent(content: string): boolean {
+  return content.includes(START_MARKER) || content.includes(END_MARKER);
+}
+
 function assertValidMarkers(content: string): void {
   const startMarkerCount = content.split(START_MARKER).length - 1;
   const endMarkerCount = content.split(END_MARKER).length - 1;

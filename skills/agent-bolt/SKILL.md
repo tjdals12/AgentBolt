@@ -191,14 +191,25 @@ config is a hand edit.
                  {
                    "name": "commit-rules",
                    "description": "Commit message conventions and granularity for this project.",
+                   "usage": "Read before writing a commit message.",
                    "recommended": { "load": "always" }
                  },
                  {
                    "name": "typescript-standards",
                    "description": "Project-wide TypeScript coding standards: typing, naming, imports, function/class design, compiler options, and type performance.",
+                   "usage": "Read before editing TypeScript code.",
                    "recommended": {
                      "load": "conditional",
                      "glob": ["**/*.ts", "**/*.tsx"]
+                   }
+                 },
+                 {
+                   "name": "review-guidelines",
+                   "description": "Code review conventions",
+                   "usage": "Read before reviewing code.",
+                   "recommended": {
+                     "load": "reference",
+                     "path": "docs/guidelines"
                    }
                  }
                ]
@@ -211,9 +222,9 @@ config is a hand edit.
    }
    ```
 
-   A guideline's `recommended` is the load mode `add-pack`/`add-item` will
-   write into the config: `always`, or `conditional` with the globs it applies
-   to.
+   A guideline's `recommended` contains the installation settings
+   `add-pack`/`add-item` will write into the config: `always`, `reference`
+   with an installation `path`, or `conditional` with its `glob` patterns.
 
 3. **Organize what you found and present it.** Group by pack, and give every
    item the same labeled shape, filled from its description. Present all of
@@ -437,7 +448,8 @@ and the project, settles it with the user, and hands the result to
 - Do not ask a question whose answer would not change what you recommend —
   every prompt is built from items in the working set.
 - Say what a guideline's load mode means when recommending one: `always`
-  applies it at all times, `conditional` only to files matching its globs.
+  applies it at all times, `reference` links a separate body file with its
+  `usage` text, and `conditional` applies only to files matching its globs.
 
 ## Install items
 
@@ -509,14 +521,16 @@ and the project, settles it with the user, and hands the result to
    — these commands edit `.agent-bolt/catalog-config.yml` and stop.
 
 3. **Adjust guideline load modes if the user wants them different.**
-   Selections land with the catalog's `recommended` load mode. Changing
-   `load`/`glob` afterward is done by editing the config file by hand — see
+   Selections land with the catalog's `recommended` installation settings.
+   Changing `load`/`glob`/`path` afterward is done by editing the config file
+   by hand — see
    [references/catalog-config-schema.md](references/catalog-config-schema.md).
 
-4. **Preflight the shared instructions file.** Some tools install guidelines
-   into a shared instructions file, fenced by a marker block the CLI owns
-   (e.g. Codex and OpenCode, which share `AGENTS.md`). If guidelines are being
-   installed for such a tool, check that file first:
+4. **Preflight the shared instructions file.** `always` and `reference` use
+   a marker block in `CLAUDE.md` (Claude), `AGENTS.md` (Cursor, Codex,
+   OpenCode), or `.github/copilot-instructions.md` (Copilot). Codex and
+   OpenCode also use `AGENTS.md` for conditional guidelines. Check the
+   relevant file first:
    - The file does not exist → fine; `sync` creates it, markers included.
    - The file exists and has `<!-- bolt:start -->` and `<!-- bolt:end -->` →
      fine.
