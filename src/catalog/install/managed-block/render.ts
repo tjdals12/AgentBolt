@@ -52,7 +52,11 @@ export function replaceManagedBlock(content: string, newBlockContent: string): s
 
   const beforeBlockContent = content.substring(0, startMarkerIndex);
   const managedBlock = buildManagedBlock(newBlockContent).trimEnd();
-  const afterBlockContent = content.substring(endMarkerIndex + END_MARKER.length);
+  let afterBlockContent = content.substring(endMarkerIndex + END_MARKER.length);
+  const hasAfterBlockContent = afterBlockContent.trim().length > 0;
+  if (!hasAfterBlockContent) {
+    afterBlockContent = '\n';
+  }
 
   return beforeBlockContent + managedBlock + afterBlockContent;
 }

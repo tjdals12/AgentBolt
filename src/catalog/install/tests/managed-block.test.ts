@@ -22,6 +22,29 @@ function docWith(before: string, fragment: string, after: string): string {
 }
 
 describe('replaceManagedBlock', () => {
+  it.each([
+    { after: '', expected: '\n' },
+    { after: '\n', expected: '\n' },
+    { after: '\n\n', expected: '\n' },
+    { after: '\n\n\n\n\n', expected: '\n' },
+    { after: ' \r\n\t\r\n', expected: '\n' },
+    {
+      after: '\n\n\n\n\n## User footer\n\n\n\n\n',
+      expected: '\n\n\n\n\n## User footer\n\n\n\n\n',
+    },
+    { after: '\r\n\r\nUser footer\r\n', expected: '\r\n\r\nUser footer\r\n' },
+  ])('normalizes only a whitespace-only suffix: $after', ({ after, expected }) => {
+    const before = '\n\n# User intro\n\n\n\n\n';
+    const doc = `${before}${START}\nold fragment\n${END}${after}`;
+    const content = buildManagedBlockContent(['new fragment']);
+
+    const result = replaceManagedBlock(doc, content);
+
+    expect(result.substring(0, result.indexOf(START))).toBe(before);
+    expect(result.substring(result.indexOf(END) + END.length)).toBe(expected);
+    expect(replaceManagedBlock(result, content)).toBe(result);
+  });
+
   it('preserves user text above and below the block verbatim (U-MB-1)', () => {
     const before = '# AGENTS\n\nIntro written by a human.\n\n';
     const after = '\n\n## Footer kept by the human\n';

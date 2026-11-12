@@ -13,6 +13,34 @@ afterEach(() => {
 });
 
 describe('installed Markdown newlines', () => {
+  it('normalizes existing file endings when no content follows the end marker', async () => {
+    const project = createProject();
+    projects.push(project);
+    writeCatalog(project.projectPath, {
+      packs: { demo: { guidelines: { example: { body: 'Example body.\n' } } } },
+    });
+    writeConfig(project.projectPath, {
+      tools: ['claude', 'codex', 'copilot'],
+      sources: { dev: { type: 'local', path: './catalog' } },
+      packs: { dev: { demo: { guidelines: { example: { load: 'always' } } } } },
+    });
+    const files = ['CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md'];
+    for (const file of files) {
+      project.write(file, '<!-- bolt:start -->\nold\n<!-- bolt:end -->\n\n\n\n\n');
+    }
+
+    new SyncCommand().execute(project.projectPath);
+
+    for (const file of files) {
+      const installed = project.read(file);
+      expect(installed).toMatch(/<!-- bolt:end -->\n$/);
+      expect(await format(installed, { parser: 'markdown' })).toBe(installed);
+    }
+    expect(new CheckCommand().execute(project.projectPath).drifted).toBe(false);
+    const { toolSyncResults } = new SyncCommand().execute(project.projectPath);
+    expect(toolSyncResults.every(({ changes }) => changes.length === 0)).toBe(true);
+  });
+
   it.each(
     [
       { scenario: 'no final newline', ending: '' },
