@@ -11,12 +11,12 @@ const HEADER = dedent`
 
 export function buildManagedBlockContent(fragments: string[]): string {
   const trimmed = fragments.map((fragment) => fragment.replace(/\s+$/, ''));
-  const body = trimmed.length > 0 ? `\n${trimmed.join('\n\n\n')}\n` : '';
+  const body = trimmed.length > 0 ? `\n${trimmed.join('\n\n')}\n` : '';
   return body;
 }
 
 export function buildManagedBlock(content: string): string {
-  return `${START_MARKER}\n${HEADER}\n${content}\n${END_MARKER}`;
+  return `${START_MARKER}\n${HEADER}\n${content}\n${END_MARKER}\n`;
 }
 
 export function isManagedBlockPresent(content: string): boolean {
@@ -51,8 +51,12 @@ export function replaceManagedBlock(content: string, newBlockContent: string): s
   const endMarkerIndex = content.indexOf(END_MARKER);
 
   const beforeBlockContent = content.substring(0, startMarkerIndex);
-  const managedBlock = buildManagedBlock(newBlockContent);
-  const afterBlockContent = content.substring(endMarkerIndex + END_MARKER.length);
+  const managedBlock = buildManagedBlock(newBlockContent).trimEnd();
+  let afterBlockContent = content.substring(endMarkerIndex + END_MARKER.length);
+  const hasAfterBlockContent = afterBlockContent.trim().length > 0;
+  if (!hasAfterBlockContent) {
+    afterBlockContent = '\n';
+  }
 
   return beforeBlockContent + managedBlock + afterBlockContent;
 }
