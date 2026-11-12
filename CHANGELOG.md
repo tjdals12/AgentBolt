@@ -1,3 +1,9 @@
+## [1.5.1-next.1](https://github.com/tjdals12/AgentBolt/compare/v1.5.0...v1.5.1-next.1) (2026-11-12)
+
+### Bug Fixes
+
+- normalize trailing newlines in installed markdown ([#14](https://github.com/tjdals12/AgentBolt/issues/14)) ([b07c46c](https://github.com/tjdals12/AgentBolt/commit/b07c46c03ce548f8e9034ef91ba1afc628282b85))
+
 # [1.5.0](https://github.com/tjdals12/AgentBolt/compare/v1.4.0...v1.5.0) (2026-10-26)
 
 ### Features
