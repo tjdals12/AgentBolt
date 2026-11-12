@@ -16,7 +16,7 @@ export function buildManagedBlockContent(fragments: string[]): string {
 }
 
 export function buildManagedBlock(content: string): string {
-  return `${START_MARKER}\n${HEADER}\n${content}\n${END_MARKER}`;
+  return `${START_MARKER}\n${HEADER}\n${content}\n${END_MARKER}\n`;
 }
 
 export function isManagedBlockPresent(content: string): boolean {
@@ -51,7 +51,7 @@ export function replaceManagedBlock(content: string, newBlockContent: string): s
   const endMarkerIndex = content.indexOf(END_MARKER);
 
   const beforeBlockContent = content.substring(0, startMarkerIndex);
-  const managedBlock = buildManagedBlock(newBlockContent);
+  const managedBlock = buildManagedBlock(newBlockContent).trimEnd();
   const afterBlockContent = content.substring(endMarkerIndex + END_MARKER.length);
 
   return beforeBlockContent + managedBlock + afterBlockContent;
