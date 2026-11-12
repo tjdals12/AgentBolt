@@ -91,7 +91,7 @@ describe('buildManagedBlockContent', () => {
   });
 
   it('joins fragments with blank lines and trims trailing whitespace (U-MB-6b)', () => {
-    expect(buildManagedBlockContent(['a   ', 'b\n'])).toBe('\na\n\n\nb\n');
+    expect(buildManagedBlockContent(['a   ', 'b\n'])).toBe('\na\n\nb\n');
   });
 });
 

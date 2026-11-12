@@ -11,7 +11,7 @@ const HEADER = dedent`
 
 export function buildManagedBlockContent(fragments: string[]): string {
   const trimmed = fragments.map((fragment) => fragment.replace(/\s+$/, ''));
-  const body = trimmed.length > 0 ? `\n${trimmed.join('\n\n\n')}\n` : '';
+  const body = trimmed.length > 0 ? `\n${trimmed.join('\n\n')}\n` : '';
   return body;
 }
 

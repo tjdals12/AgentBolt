@@ -13,6 +13,52 @@ afterEach(() => {
 });
 
 describe('installed Markdown newlines', () => {
+  it('keeps mixed reference and inline guidelines unchanged by Prettier', async () => {
+    const project = createProject();
+    projects.push(project);
+    writeCatalog(project.projectPath, {
+      packs: {
+        common: {
+          guidelines: {
+            rules: { body: 'Reference body.\n', usage: 'Read before editing.' },
+            'repository-guardrails': {
+              body: '# Repository Guardrails\n\n- Keep changes scoped.\n',
+            },
+          },
+        },
+      },
+    });
+    writeConfig(project.projectPath, {
+      tools: [...TOOL_IDS],
+      sources: { team: { type: 'local', path: './catalog' } },
+      packs: {
+        team: {
+          common: {
+            guidelines: {
+              rules: { load: 'reference', path: 'docs' },
+              'repository-guardrails': { load: 'always' },
+            },
+          },
+        },
+      },
+    });
+
+    new SyncCommand().execute(project.projectPath);
+
+    for (const file of ['CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md']) {
+      const installed = project.read(file);
+      expect(installed).toContain(
+        'Read before editing.\n\n<!-- bolt: team/common/repository-guardrails',
+      );
+      const formatted = await format(installed, { parser: 'markdown' });
+      expect(formatted).toBe(installed);
+      project.write(file, formatted);
+    }
+    expect(new CheckCommand().execute(project.projectPath).drifted).toBe(false);
+    const { toolSyncResults } = new SyncCommand().execute(project.projectPath);
+    expect(toolSyncResults.every(({ changes }) => changes.length === 0)).toBe(true);
+  });
+
   it('normalizes existing file endings when no content follows the end marker', async () => {
     const project = createProject();
     projects.push(project);
