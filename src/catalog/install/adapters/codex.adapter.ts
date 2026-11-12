@@ -22,7 +22,7 @@ export class CodexAdapter extends Adapter {
 
     const dir = path.join(this.skillsDir, installName);
     const entryFileName = 'SKILL.md';
-    const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
+    const entryContent = this.formatMarkdown(frontmatter, instructions);
 
     return {
       sourceAlias,
