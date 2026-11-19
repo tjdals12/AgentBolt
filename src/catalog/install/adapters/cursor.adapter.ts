@@ -22,7 +22,7 @@ export class CursorAdapter extends Adapter {
 
     const dir = path.join(this.skillsDir, installName);
     const entryFileName = 'SKILL.md';
-    const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
+    const entryContent = this.formatMarkdown(frontmatter, instructions);
 
     return {
       sourceAlias,
@@ -42,7 +42,7 @@ export class CursorAdapter extends Adapter {
     const frontmatter = this.buildItemFrontmatter({ name: installName, description, toolConfig });
 
     const filePath = path.join(this.agentsDir, `${installName}.md`);
-    const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;
+    const content = this.formatMarkdown(frontmatter, instructions);
 
     return {
       sourceAlias,
@@ -107,7 +107,7 @@ export class CursorAdapter extends Adapter {
     const frontmatter = lines.join('\n');
 
     const filePath = path.join(this.rulesDir, `${installName}.mdc`);
-    const content = `---\n${frontmatter}\n---\n\n${body}\n`;
+    const content = this.formatMarkdown(frontmatter, body);
 
     return {
       kind: 'rule-file',

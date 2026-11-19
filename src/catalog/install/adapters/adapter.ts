@@ -41,6 +41,11 @@ export abstract class Adapter {
     return stringify(data, { lineWidth: 0 }).trimEnd();
   }
 
+  protected formatMarkdown(frontmatter: string, body: string): string {
+    const content = `---\n${frontmatter}\n---\n\n${body}`;
+    return `${content.trimEnd()}\n`;
+  }
+
   protected buildItemFrontmatter(data: {
     name: string;
     description: string;

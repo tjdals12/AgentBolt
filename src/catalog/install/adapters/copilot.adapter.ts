@@ -26,7 +26,7 @@ export class CopilotAdapter extends Adapter {
 
     const dir = path.join(this.skillsDir, installName);
     const entryFileName = 'SKILL.md';
-    const entryContent = `---\n${frontmatter}\n---\n\n${instructions}\n`;
+    const entryContent = this.formatMarkdown(frontmatter, instructions);
 
     return {
       sourceAlias,
@@ -46,7 +46,7 @@ export class CopilotAdapter extends Adapter {
     const frontmatter = this.buildItemFrontmatter({ name: installName, description, toolConfig });
 
     const filePath = path.join(this.agentsDir, `${installName}.agent.md`);
-    const content = `---\n${frontmatter}\n---\n\n${instructions}\n`;
+    const content = this.formatMarkdown(frontmatter, instructions);
 
     return {
       sourceAlias,
@@ -107,7 +107,7 @@ export class CopilotAdapter extends Adapter {
     const frontmatter = this.formatFrontmatter({ description, applyTo });
 
     const filePath = path.join(this.instructionsDir, `${installName}.instructions.md`);
-    const content = `---\n${frontmatter}\n---\n\n${body}\n`;
+    const content = this.formatMarkdown(frontmatter, body);
 
     return {
       kind: 'rule-file',
